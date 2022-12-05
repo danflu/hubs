@@ -82,7 +82,8 @@ export function SceneInfo({ accountId, scene, showAttributions, canChangeScene, 
     </Button>
   );
   if (!scene) return changeSceneButton;
-  const showSceneLink = allowDisplayOfSceneLink(accountId, scene);
+  //const showSceneLink = allowDisplayOfSceneLink(accountId, scene);
+  const showSceneLink = false;
   const attributions = (scene.attributions && scene.attributions.content) || [];
   const creator = scene.attributions && scene.attributions.creator;
 

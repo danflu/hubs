@@ -66,7 +66,8 @@ export const SCHEMA = {
         displayName: { type: "string", pattern: "^[A-Za-z0-9_~ -]{3,32}$" },
         avatarId: { type: "string" },
         // personalAvatarId is obsolete, but we need it here for backwards compatibility.
-        personalAvatarId: { type: "string" }
+        personalAvatarId: { type: "string" },
+        avatarSubId: { type : "string"}
       }
     },
 
@@ -430,7 +431,7 @@ export default class Store extends EventTarget {
       this.dispatchEvent(new CustomEvent("profilechanged"));
     }
     this.dispatchEvent(new CustomEvent("statechanged"));
-
+  
     return finalState;
   }
 

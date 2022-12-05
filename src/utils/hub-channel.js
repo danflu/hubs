@@ -274,6 +274,10 @@ export default class HubChannel extends EventTarget {
   };
 
   sendProfileUpdate = () => {
+    if (!this.channel) {
+      console.warn("No phoenix channel initialized before profile update.");
+      return;
+    }
     this.channel.push("events:profile_updated", { profile: this.store.state.profile });
   };
 

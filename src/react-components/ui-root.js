@@ -198,6 +198,7 @@ class UIRoot extends Component {
     objectSrc: "",
     sidebarId: null,
     presenceCount: 0,
+    irmData : null,
     chatInputEffect: () => {}
   };
 
@@ -214,6 +215,21 @@ class UIRoot extends Component {
   componentDidUpdate(prevProps) {
     const { hubChannel, showSignInDialog } = this.props;
     if (hubChannel) {
+      if (!window.irmCtrl.initCalled())
+      {
+        window.irmCtrl.init(hubChannel, irmData => {
+          // updateStateCB
+          this.setState(prevState => ({
+            irmData : irmData
+          }));
+          const {store} = this.props;
+          store.state.profile.displayName = irmData.nick;
+          store.update({ profile: { ...store.state.profile} });
+        });
+      }
+      if (this.state.irmData === null) {
+        this.setState({irmData : window.irmCtrl.data()});
+      }
       const { signedIn } = hubChannel;
       if (signedIn !== this.state.signedIn) {
         this.setState({ signedIn });
@@ -375,6 +391,18 @@ class UIRoot extends Component {
     this.playerRig = scene.querySelector("#avatar-rig");
 
     scene.addEventListener("action_media_tweet", this.onTweet);
+
+    // set avatar that was selected by user in IRMWelcome landing page.
+    const {store} = this.props;
+    const {avatar} = this.props;
+    if (avatar &&
+        (avatar.avatarUrl   != store.state.profile.avatarId ||
+         avatar.avatarSubId != store.state.profile.avatarSubId))
+    {
+      console.log("UIRoot : updating avatar...");
+      store.update({ profile: { ...store.state.profile, ...{ avatarId: avatar.avatarUrl, avatarSubId:avatar.avatarSubId } } });
+      scene.emit("avatar_updated");
+    }
   }
 
   UNSAFE_componentWillMount() {
@@ -797,7 +825,8 @@ class UIRoot extends Component {
 
   renderEntryStartPanel = () => {
     const { hasAcceptedProfile, hasChangedName } = this.props.store.state.activity;
-    const promptForNameAndAvatarBeforeEntry = this.props.hubIsBound ? !hasAcceptedProfile : !hasChangedName;
+    //const promptForNameAndAvatarBeforeEntry = this.props.hubIsBound ? !hasAcceptedProfile : !hasChangedName;
+    const promptForNameAndAvatarBeforeEntry = true;
 
     // TODO: What does onEnteringCanceled do?
     return (
@@ -1087,7 +1116,7 @@ class UIRoot extends Component {
     const moreMenu = [
       {
         id: "user",
-        label: !this.state.signedIn ? (
+        /*label: !this.state.signedIn ? (
           <FormattedMessage id="more-menu.not-signed-in" defaultMessage="You are not signed in" />
         ) : (
           <FormattedMessage
@@ -1095,8 +1124,8 @@ class UIRoot extends Component {
             defaultMessage="Signed in as: {email}"
             values={{ email: maskEmail(this.props.store.state.credentials.email) }}
           />
-        ),
-        items: [
+        ),*/
+        items: [/*
           this.state.signedIn
             ? {
                 id: "sign-out",
@@ -1112,7 +1141,7 @@ class UIRoot extends Component {
                 label: <FormattedMessage id="more-menu.sign-in" defaultMessage="Sign In" />,
                 icon: EnterIcon,
                 onClick: () => this.showContextualSignInDialog()
-              },
+              },*/
           canCreateRoom && {
             id: "create-room",
             label: <FormattedMessage id="more-menu.create-room" defaultMessage="Create Room" />,
@@ -1128,7 +1157,7 @@ class UIRoot extends Component {
             label: <FormattedMessage id="more-menu.profile" defaultMessage="Change Name & Avatar" />,
             icon: AvatarIcon,
             onClick: () => this.setSidebar("profile")
-          },
+          },/*
           {
             id: "favorite-rooms",
             label: <FormattedMessage id="more-menu.favorite-rooms" defaultMessage="Favorite Rooms" />,
@@ -1142,7 +1171,7 @@ class UIRoot extends Component {
                 },
                 SignInMessages.favoriteRooms
               )
-          },
+          },*/
           {
             id: "preferences",
             label: <FormattedMessage id="more-menu.preferences" defaultMessage="Preferences" />,
@@ -1161,13 +1190,13 @@ class UIRoot extends Component {
             icon: HomeIcon,
             onClick: () => this.setSidebar("room-info")
           },
-          (this.props.breakpoint === "sm" || this.props.breakpoint === "md") &&
+          (this.props.breakpoint === "sm" || this.props.breakpoint === "md") && this.props.hub &&
             (this.props.hub.entry_mode !== "invite" || this.props.hubChannel.can("update_hub")) && {
               id: "invite",
               label: <FormattedMessage id="more-menu.invite" defaultMessage="Invite" />,
               icon: InviteIcon,
               onClick: () => this.props.scene.emit("action_invite")
-            },
+            },/*
           this.isFavorited()
             ? {
                 id: "unfavorite-room",
@@ -1191,18 +1220,19 @@ class UIRoot extends Component {
               ),
               icon: CameraIcon,
               onClick: () => this.toggleStreamerMode()
-            },
+            },*/
           (this.props.breakpoint === "sm" || this.props.breakpoint === "md") &&
             entered && {
               id: "leave-room",
               label: <FormattedMessage id="more-menu.enter-leave-room" defaultMessage="Leave Room" />,
               icon: LeaveIcon,
-              onClick: () => {
-                this.showNonHistoriedDialog(LeaveRoomModal, {
-                  destinationUrl: "/",
-                  reason: LeaveReason.leaveRoom
-                });
-              }
+              // onClick: () => {
+              //   this.showNonHistoriedDialog(LeaveRoomModal, {
+              //     destinationUrl: "/",
+              //     reason: LeaveReason.leaveRoom
+              //   });
+              // }
+              onClick: () => {window.irmCtrl.leave()}
             },
           canCloseRoom && {
             id: "close-room",
@@ -1223,7 +1253,7 @@ class UIRoot extends Component {
               )
           }
         ].filter(item => item)
-      },
+      }/*,
       {
         id: "support",
         label: <FormattedMessage id="more-menu.support" defaultMessage="Support" />,
@@ -1277,7 +1307,7 @@ class UIRoot extends Component {
             href: configs.link("privacy_notice", PRIVACY)
           }
         ].filter(item => item)
-      }
+      }*/
     ];
 
     return (
@@ -1433,6 +1463,7 @@ class UIRoot extends Component {
                           scene={this.props.scene}
                           onClose={() => this.setSidebar(null)}
                           inputEffect={this.state.chatInputEffect}
+                          irmCanSendChat={this.state.irmData.allow.sendChat}
                         />
                       )}
                       {this.state.sidebarId === "objects" && (
@@ -1518,13 +1549,13 @@ class UIRoot extends Component {
                   ) : undefined
                 }
                 modal={this.state.dialog}
-                toolbarLeft={
+                toolbarLeft={ configs.isAdmin() ?
                   <InvitePopoverContainer
                     hub={this.props.hub}
                     hubChannel={this.props.hubChannel}
                     scene={this.props.scene}
                     store={this.props.store}
-                  />
+                  /> : <></>
                 }
                 toolbarCenter={
                   <>
@@ -1551,14 +1582,21 @@ class UIRoot extends Component {
                     {entered && (
                       <>
                         <AudioPopoverContainer scene={this.props.scene} />
-                        <SharePopoverContainer scene={this.props.scene} hubChannel={this.props.hubChannel} />
+                        {(this.state.irmData.allow.shareCamera ||
+                          this.state.irmData.allow.shareScreen) && <SharePopoverContainer scene={this.props.scene} hubChannel={this.props.hubChannel} irmCanShareCamera={this.state.irmData.allow.shareCamera} irmCanShareScreen={this.state.irmData.allow.shareScreen}/>}
                         <PlacePopoverContainer
                           scene={this.props.scene}
                           hubChannel={this.props.hubChannel}
                           mediaSearchStore={this.props.mediaSearchStore}
                           showNonHistoriedDialog={this.showNonHistoriedDialog}
+                          irmCanUsePen={this.state.irmData.allow.usePen}
+                          irmCanAddCamera={this.state.irmData.allow.addCamera}
+                          irmCanAddAvatar={this.state.irmData.allow.addAvatar}
+                          irmCanAddScene={this.state.irmData.allow.addScene}
+                          irmCanAddObjects={this.state.irmData.allow.addObjects}
+                          irmCanAddGIF={this.state.irmData.allow.addGIF}
                         />
-                        {this.props.hubChannel.can("spawn_emoji") && (
+                        {this.props.hubChannel.can("spawn_emoji") && this.state.irmData.allow.emojiReaction && (
                           <ReactionPopoverContainer
                             scene={this.props.scene}
                             initialPresence={getPresenceProfileForSession(this.props.presences, this.props.sessionId)}
@@ -1593,12 +1631,13 @@ class UIRoot extends Component {
                         icon={<LeaveIcon />}
                         label={<FormattedMessage id="toolbar.leave-room-button" defaultMessage="Leave" />}
                         preset="cancel"
-                        onClick={() => {
-                          this.showNonHistoriedDialog(LeaveRoomModal, {
-                            destinationUrl: "/",
-                            reason: LeaveReason.leaveRoom
-                          });
-                        }}
+                        // onClick={() => {
+                        //   this.showNonHistoriedDialog(LeaveRoomModal, {
+                        //     destinationUrl: "/",
+                        //     reason: LeaveReason.leaveRoom
+                        //   });
+                        // }}
+                        onClick={() => {window.irmCtrl.leave()}}
                       />
                     )}
                     <MoreMenuPopoverButton menu={moreMenu} />

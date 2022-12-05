@@ -190,7 +190,7 @@ class AvatarPreview extends Component {
   };
 
   componentDidUpdate = async oldProps => {
-    if (oldProps.avatarGltfUrl !== this.props.avatarGltfUrl) {
+    if (oldProps.avatarGltfUrl !== this.props.avatarGltfUrl || oldProps.avatarSubId !== this.props.avatarSubId) {
       if (this.avatar) {
         this.scene.remove(this.avatar);
         this.avatar = null;

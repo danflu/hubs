@@ -176,7 +176,10 @@ export default class SceneEntryManager {
     this._lastFetchedAvatarId = avatarId;
     const avatarSrc = await getAvatarSrc(avatarId);
 
-    this.avatarRig.setAttribute("player-info", { avatarSrc, avatarType: getAvatarType(avatarId) });
+    // sometimes when setting avatar from an external provider (for example ReadyPlayer), the avatar glb url dot change.
+    // If the url do not change (since it is the only attribute) AFRAME considers the attributes are all the same and do not notify the change upstream.
+    // this is the reason we need to set a new attribute containing a unique identifier (avatarSubId)
+    this.avatarRig.setAttribute("player-info", { avatarSrc, avatarType: getAvatarType(avatarId), avatarSubId:this.store.state.profile.avatarSubId });
   };
 
   _setupKicking = () => {

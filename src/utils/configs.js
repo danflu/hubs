@@ -7,6 +7,57 @@ import { getLocale, getMessage } from "./i18n";
 
 // Read configs from global variable if available, otherwise use the process.env injected from build.
 const configs = {};
+
+configs.showLandingPage = false;
+configs.enableReadyPlayer = true;
+configs.enableIRMAuthMode = true;
+
+const irmAuthModeEnabledParam = "irmAuthModeEnabled";
+const showEditAvatarParam     = "showEditAvatarReadyPlayer";
+
+// When starting from .link page (where user types a code password to join room) IRM authentication is disabled because auth params are not carried over when user types the url (e.g. metatest.link) in another device.
+// So we create a state in local storage to tell if we are skipping IRM Auth or not.
+configs.setIRMAuthMode = () => {
+  if (!configs.enableIRMAuthMode)
+    return;
+  if (document.referrer.length == 0) {
+    // referrer empty means we are landing directly (not from another page from the same domain)
+    localStorage.setItem(irmAuthModeEnabledParam, "true");
+    console.log("Enabling IRM Authentication...");
+  } else {
+    const url = new URL(document.referrer);
+    const skipIrmAuth = url.pathname === "/link/" ? true : false;
+    if (skipIrmAuth) {
+      localStorage.setItem(irmAuthModeEnabledParam, "false");
+      console.log("Disabling IRM Authentication...");
+    }
+  }
+}
+
+configs.isIRMAuthModeEnabled = () => {
+  if (!configs.enableIRMAuthMode)
+    return false;
+  return localStorage.getItem(irmAuthModeEnabledParam) === "true";
+}
+
+configs.loadEditAvatarMode = (reloadAgain = true) => {
+  localStorage.setItem(showEditAvatarParam, `${reloadAgain ? 1 : 2}`);
+  window.location.reload();
+}
+
+configs.editAvatarMode = () => {
+  const val = localStorage.getItem(showEditAvatarParam);
+  // const edit = val == "2";
+  // const reload = val == "1";
+  const edit = val == "1";
+  const reload = false;
+  return {edit, reload};
+}
+
+configs.resetEditAvatarMode = () => {
+  localStorage.removeItem(showEditAvatarParam);
+}
+
 let isAdmin = false;
 [
   "RETICULUM_SERVER",

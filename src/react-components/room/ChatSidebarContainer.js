@@ -160,7 +160,7 @@ ChatContextProvider.propTypes = {
   messageDispatch: PropTypes.object
 };
 
-export function ChatSidebarContainer({ scene, canSpawnMessages, presences, occupantCount, inputEffect, onClose }) {
+export function ChatSidebarContainer({ scene, canSpawnMessages, presences, occupantCount, inputEffect, onClose, irmCanSendChat }) {
   const { messageGroups, sendMessage, setMessagesRead } = useContext(ChatContext);
   const [onScrollList, listRef, scrolledToBottom] = useMaintainScrollPosition(messageGroups);
   const [message, setMessage] = useState("");
@@ -290,7 +290,7 @@ export function ChatSidebarContainer({ scene, canSpawnMessages, presences, occup
           }
         })}
       </ChatMessageList>
-      <ChatInput
+      {irmCanSendChat && <ChatInput
         id="chat-input"
         ref={inputRef}
         onKeyDown={onKeyDown}
@@ -318,7 +318,7 @@ export function ChatSidebarContainer({ scene, canSpawnMessages, presences, occup
             )}
           </>
         }
-      />
+      />}
     </ChatSidebar>
   );
 }

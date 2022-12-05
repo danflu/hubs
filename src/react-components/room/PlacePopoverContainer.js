@@ -16,7 +16,7 @@ import { FormattedMessage } from "react-intl";
 import { anyEntityWith } from "../../utils/bit-utils";
 import { MyCameraTool } from "../../bit-components";
 
-export function PlacePopoverContainer({ scene, mediaSearchStore, showNonHistoriedDialog, hubChannel }) {
+export function PlacePopoverContainer({ scene, mediaSearchStore, showNonHistoriedDialog, hubChannel, irmCanUsePen, irmCanAddCamera, irmCanAddAvatar, irmCanAddScene, irmCanAddObjects, irmCanAddGIF }) {
   const [items, setItems] = useState([]);
 
   useEffect(
@@ -26,7 +26,7 @@ export function PlacePopoverContainer({ scene, mediaSearchStore, showNonHistorie
         const hasActivePen = !!scene.systems["pen-tools"].getMyPen();
 
         let nextItems = [
-          hubChannel.can("spawn_drawing") && {
+          hubChannel.can("spawn_drawing") && irmCanUsePen && {
             id: "pen",
             icon: PenIcon,
             color: "accent5",
@@ -34,7 +34,7 @@ export function PlacePopoverContainer({ scene, mediaSearchStore, showNonHistorie
             onSelect: () => scene.emit("penButtonPressed"),
             selected: hasActivePen
           },
-          hubChannel.can("spawn_camera") && {
+          hubChannel.can("spawn_camera") && irmCanAddCamera && {
             id: "camera",
             icon: CameraIcon,
             color: "accent5",
@@ -50,28 +50,28 @@ export function PlacePopoverContainer({ scene, mediaSearchStore, showNonHistorie
             // TODO: Create text/link dialog
             // { id: "text", icon: TextIcon, color: "blue", label: "Text" },
             // { id: "link", icon: LinkIcon, color: "blue", label: "Link" },
-            configs.integration("tenor") && {
+            configs.integration("tenor") && irmCanAddGIF && {
               id: "gif",
               icon: GIFIcon,
               color: "accent2",
               label: <FormattedMessage id="place-popover.item-type.gif" defaultMessage="GIF" />,
               onSelect: () => mediaSearchStore.sourceNavigate("gifs")
             },
-            configs.integration("sketchfab") && {
+            configs.integration("sketchfab") && irmCanAddObjects && {
               id: "model",
               icon: ObjectIcon,
               color: "accent2",
               label: <FormattedMessage id="place-popover.item-type.model" defaultMessage="3D Model" />,
               onSelect: () => mediaSearchStore.sourceNavigate("sketchfab")
             },
-            {
+            irmCanAddAvatar && {
               id: "avatar",
               icon: AvatarIcon,
               color: "accent1",
               label: <FormattedMessage id="place-popover.item-type.avatar" defaultMessage="Avatar" />,
               onSelect: () => mediaSearchStore.sourceNavigate("avatars")
             },
-            {
+            irmCanAddScene && {
               id: "scene",
               icon: SceneIcon,
               color: "accent1",
@@ -79,7 +79,7 @@ export function PlacePopoverContainer({ scene, mediaSearchStore, showNonHistorie
               onSelect: () => mediaSearchStore.sourceNavigate("scenes")
             },
             // TODO: Launch system file prompt directly
-            {
+            irmCanAddObjects && {
               id: "upload",
               icon: UploadIcon,
               color: "accent3",

@@ -32,7 +32,12 @@ export default class PreloadOverlay extends Component {
         </a>
         <div className={styles.mainPanel}>
           <div className={styles.hubName}>{this.props.hubName}</div>
+
           {this.props.onLoadClicked &&
+              <Button preset="primary" onClick={this.props.onLoadClicked}>
+                {loadButtonText}
+              </Button>}
+          {/* {this.props.onLoadClicked &&
             (!isMobile ? (
               <Button preset="primary" onClick={this.props.onLoadClicked}>
                 {loadButtonText}
@@ -41,7 +46,7 @@ export default class PreloadOverlay extends Component {
               <Button preset="primary" as="a" href={this.props.baseUrl} target="_blank" rel="noreferrer noopener">
                 {loadButtonText}
               </Button>
-            ))}
+            ))} */}
         </div>
       </div>
     );

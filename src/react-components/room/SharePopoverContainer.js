@@ -121,7 +121,7 @@ function useShare(scene, hubChannel) {
   };
 }
 
-export function SharePopoverContainer({ scene, hubChannel }) {
+export function SharePopoverContainer({ scene, hubChannel, irmCanShareCamera, irmCanShareScreen }) {
   const {
     sharingSource,
     canShareCamera,
@@ -133,7 +133,7 @@ export function SharePopoverContainer({ scene, hubChannel }) {
   } = useShare(scene, hubChannel);
 
   const items = [
-    canShareCamera && {
+    canShareCamera && irmCanShareCamera && {
       id: "camera",
       icon: VideoIcon,
       color: "accent5",
@@ -141,7 +141,7 @@ export function SharePopoverContainer({ scene, hubChannel }) {
       onSelect: toggleShareCamera,
       active: sharingSource === MediaDevices.CAMERA
     },
-    canShareScreen && {
+    canShareScreen && irmCanShareScreen && {
       id: "screen",
       icon: DesktopIcon,
       color: "accent5",

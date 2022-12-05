@@ -144,6 +144,7 @@ import { Router, Route } from "react-router-dom";
 import { createBrowserHistory, createMemoryHistory } from "history";
 import { pushHistoryState } from "./utils/history";
 import UIRoot from "./react-components/ui-root";
+import IRMWelcome from "./react-components/irm/IRMWelcome";
 import { ExitedRoomScreenContainer } from "./react-components/room/ExitedRoomScreenContainer";
 import AuthChannel from "./utils/auth-channel";
 import HubChannel from "./utils/hub-channel";
@@ -188,7 +189,9 @@ import { sleep } from "./utils/async-utils";
 import { platformUnsupported } from "./support";
 import { renderAsEntity } from "./utils/jsx-entity";
 import { VideoMenuPrefab } from "./prefabs/video-menu";
+import IRMCtrl from "./react-components/irm/irm-ctrl";
 
+window.irmCtrl = new IRMCtrl();
 window.APP = new App();
 renderAsEntity(APP.world, VideoMenuPrefab());
 renderAsEntity(APP.world, VideoMenuPrefab());
@@ -662,10 +665,34 @@ async function runBotMode(scene, entryManager) {
   entryManager.enterSceneWhenLoaded(false, false);
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
+  const {edit, reload} = configs.editAvatarMode();
+  if (reload) {
+    console.log("avatar edit mode, reloading again...");
+    configs.loadEditAvatarMode(false);
+    return;
+  }
+
+  if (configs.showLandingPage || edit) {
+    ReactDOM.render(<IRMWelcome loadMetaverse={loadMetaverse} editAvatarMode={edit}/>, document.getElementById("ui-root"));
+  } else {
+    loadMetaverse();
+  }
+});
+
+const loadMetaverse = async (avatar) => {
+
+  console.log(`hub.js -> loadMetaverse...`);
+  configs.setIRMAuthMode();
+  configs.resetEditAvatarMode();
+
   if (isOAuthModal) {
     return;
   }
+
+  if (avatar) {
+    uiProps = {...uiProps, avatar}
+  };
 
   await store.initProfile();
 
@@ -1369,4 +1396,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   authChannel.setSocket(socket);
   linkChannel.setSocket(socket);
-});
+};

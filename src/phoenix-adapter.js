@@ -162,6 +162,7 @@ export default class PhoenixAdapter {
   }
 
   handleIncomingNAF = data => {
+    //console.log(`PhoenixAdapter : handleIncomingNAF:${JSON.stringify(data)}`);
     const message = authorizeOrSanitizeMessage(data);
     const source = "phx-reliable";
     if (!message.dataType) return;

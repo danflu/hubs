@@ -17,6 +17,8 @@ import { fetchReticulumAuthenticated, getReticulumFetchUrl } from "../utils/phoe
 import { proxiedUrlFor, scaledThumbnailUrlFor } from "../utils/media-url-utils";
 import { CreateTile, MediaTile } from "./room/MediaTiles";
 import { SignInMessages } from "./auth/SignInModal";
+import ReadyPlayerModal from "./irm/ReadyPlayerModal";
+
 const isMobile = AFRAME.utils.device.isMobile();
 const isMobileVR = AFRAME.utils.device.isMobileVR();
 
@@ -335,7 +337,27 @@ class MediaBrowserContainer extends Component {
   };
 
   onCreateAvatar = () => {
-    window.dispatchEvent(new CustomEvent("action_create_avatar"));
+    if (!configs.enableReadyPlayer) {
+      window.dispatchEvent(new CustomEvent("action_create_avatar"));
+    }
+    else if (isMobile)
+    {
+      // Reload page, showing avatar edit iframe.
+      // This is necessary because for some reason mobile clients crash sometimes when running iframe together with metaverse engine.
+
+      // call 'close' otherwise the UI will show this component when coming from avatar editor.
+      this.close();
+      configs.loadEditAvatarMode();
+    }
+    else
+    {
+      this.pushExitMediaBrowserHistory(false);
+      const { scene, store } = this.props;
+      this.props.showNonHistoriedDialog(ReadyPlayerModal, { onReady : (avatarUrl, avatarSubId) => {
+        store.update({ profile: { ...store.state.profile, ...{ avatarId: avatarUrl, avatarSubId } } });
+        scene.emit("avatar_updated");
+      }});
+    }
   };
 
   processThumbnailUrl = (entry, thumbnailWidth, thumbnailHeight) => {

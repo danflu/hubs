@@ -5,6 +5,7 @@ import { replaceHistoryState } from "../utils/history";
 import { AvatarSettingsSidebar } from "./room/AvatarSettingsSidebar";
 import { AvatarSetupModal } from "./room/AvatarSetupModal";
 import AvatarPreview from "./avatar-preview";
+import configs from "../utils/configs";
 
 export default class ProfileEntryPanel extends Component {
   static propTypes = {
@@ -27,6 +28,7 @@ export default class ProfileEntryPanel extends Component {
 
   state = {
     avatarId: null,
+    avatarSubId : null,
     displayName: null,
     avatar: null
   };
@@ -42,8 +44,8 @@ export default class ProfileEntryPanel extends Component {
   }
 
   getStateFromProfile = () => {
-    const { displayName, avatarId } = this.props.store.state.profile;
-    return { displayName, avatarId };
+    const { displayName, avatarId, avatarSubId } = this.props.store.state.profile;
+    return { displayName, avatarId, avatarSubId: avatarSubId ? avatarSubId : "" };
   };
 
   storeUpdated = () => this.setState(this.getStateFromProfile());
@@ -98,7 +100,7 @@ export default class ProfileEntryPanel extends Component {
   }
 
   componentDidUpdate(_prevProps, prevState) {
-    if (prevState.avatarId !== this.state.avatarId) {
+    if (prevState.avatarId !== this.state.avatarId || prevState.avatarSubId !== this.state.avatarSubId ) {
       this.refetchAvatar();
     }
   }
@@ -123,11 +125,12 @@ export default class ProfileEntryPanel extends Component {
   render() {
     const avatarSettingsProps = {
       displayNameInputRef: inp => (this.nameInput = inp),
-      disableDisplayNameInput: !!this.props.displayNameOverride,
+      //disableDisplayNameInput: !!this.props.displayNameOverride,
+      disableDisplayNameInput : configs.isIRMAuthModeEnabled(),
       displayName: this.props.displayNameOverride ? this.props.displayNameOverride : this.state.displayName,
       displayNamePattern: this.props.store.schema.definitions.profile.properties.displayName.pattern,
       onChangeDisplayName: e => this.setState({ displayName: e.target.value }),
-      avatarPreview: <AvatarPreview avatarGltfUrl={this.state.avatar && this.state.avatar.gltf_url} />,
+      avatarPreview: <AvatarPreview avatarGltfUrl={this.state.avatar && this.state.avatar.gltf_url} avatarSubId={this.state.avatarSubId} />,
       onChangeAvatar: e => {
         e.preventDefault();
         this.props.mediaSearchStore.sourceNavigateWithNoNav("avatars", "use");
