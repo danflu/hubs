@@ -272,7 +272,15 @@ export default class IRMCtrl {
                 {
                     if (url.pathname === "/nDLzQQN" ||
                         url.pathname === "/j9VbCEJ" ||
-                        url.pathname === "/rDtnBg2")
+                        url.pathname === "/rDtnBg2" ||
+                        url.pathname === "/JWXDmoi" ||
+                        url.pathname === "/iFuPijg" ||
+                        url.pathname === "/5Zf4Rty" ||
+                        url.pathname === "/acFLY9N" ||
+                        url.pathname === "/x7EJ8dE" ||
+                        url.pathname === "/6GksLy5" ||
+                        url.pathname === "/tmg7t6Y" ||
+                        url.pathname === "/dzAB8Xa")
                         {
                             ret = true;
                         }
