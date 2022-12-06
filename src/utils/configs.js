@@ -20,8 +20,9 @@ const showEditAvatarParam     = "showEditAvatarReadyPlayer";
 configs.setIRMAuthMode = () => {
   if (!configs.enableIRMAuthMode)
     return;
-  if (document.referrer.length == 0) {
+  if (document.referrer.length == 0 || configs.inIframe()) {
     // referrer empty means we are landing directly (not from another page from the same domain)
+    // if we are landing inside an iframe auth should be mandatory.
     localStorage.setItem(irmAuthModeEnabledParam, "true");
     console.log("Enabling IRM Authentication...");
   } else {
@@ -38,6 +39,14 @@ configs.isIRMAuthModeEnabled = () => {
   if (!configs.enableIRMAuthMode)
     return false;
   return localStorage.getItem(irmAuthModeEnabledParam) === "true";
+}
+
+configs.inIframe = () => {
+    try {
+        return window.self !== window.top;
+    } catch (e) {
+        return true;
+    }
 }
 
 configs.loadEditAvatarMode = (reloadAgain = true) => {

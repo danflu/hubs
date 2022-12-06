@@ -97,7 +97,11 @@ class UserPermissions
     }
 }
 
-const version = "0.0.0.3";
+const version = "0.0.0.4";
+
+const IRMAuthTokenKey = "irmAuthToken";
+const IRMApiDomainKey = "irmApiDomain";
+const IRMAppSchemeKey = "irmAppScheme";
 
 export default class IRMCtrl {
 
@@ -124,6 +128,10 @@ export default class IRMCtrl {
         const appname   = this.qsVal("app_name");
         this.mApiDomain = appname ? `https://${appname}-api.ip.tv` : this.qsVal("api_domain");
 
+        this.mAuthToken = this.checkVal(this.mAuthToken, IRMAuthTokenKey);
+        this.mAppScheme = this.checkVal(this.mAppScheme, IRMAppSchemeKey);
+        this.mApiDomain = this.checkVal(this.mApiDomain, IRMApiDomainKey);
+
         if (this.mAuthToken && this.mApiDomain)
         {
             const apiDomainParts = this.mApiDomain.split(".");
@@ -134,9 +142,9 @@ export default class IRMCtrl {
             this.mMAS = ServiceMAS_Module(this.mApiDomain);
         }
 
-        console.log(`IRMCtrl : Loading client version ${version} (Auth Mandatory:${configs.isIRMAuthModeEnabled()}) [appname:${appname}, apiDomain:${this.mApiDomain}, authToken:${this.mAuthToken}, appScheme:${this.mAppScheme}]`);
+        console.log(`IRMCtrl : Loading client version ${version} [appname:${appname}, apiDomain:${this.mApiDomain}, authToken:${this.mAuthToken}, appScheme:${this.mAppScheme}]`);
 
-        if (this.inIframe())
+        if (configs.inIframe())
         {
             this.mIFrameInterface = new IFrameInterface(() => {
                 // onCloseCB
@@ -145,12 +153,24 @@ export default class IRMCtrl {
         }
     }
 
+    checkVal(val, key) {
+        if (val) {
+            localStorage.setItem(key, val);
+        } else {
+            val = localStorage.getItem(key);
+            console.log(`IRMCtrl : checkVal : Not set, checking stored key ${key} value:(${val})`);
+        }
+        return val;
+    }
+
     initCalled() {
         return this.mInitCalled;
     }
 
     init(hubChannel, updateStateCB)
     {
+        console.log(`IRMCtrl : init : Auth Mandatory:${configs.isIRMAuthModeEnabled()}`);
+
         this.mInitCalled = true;
         this.mUpdateStateCB = updateStateCB;
 
@@ -160,8 +180,7 @@ export default class IRMCtrl {
 
                 console.log(`IRMCtrl : init : auth verify success:${JSON.stringify(response)}`);
 
-                const {nick} = response;
-                const {role} = response;
+                const {nick, role} = response;
 
                 this.mMAS.rolePermission(this.mAuthToken, role, response => {
 
@@ -178,6 +197,7 @@ export default class IRMCtrl {
         }
         else if (configs.isAdmin())
         {
+            console.log("IRMCtrl : init : user is admin");
             this.setUser();
         }
         else
@@ -365,14 +385,5 @@ export default class IRMCtrl {
     {
         console.log(`IRMCtrl : setHref : ${href}`);
         window.location.href = href;
-    }
-
-    inIframe()
-    {
-        try {
-            return window.self !== window.top;
-        } catch (e) {
-            return true;
-        }
     }
 }
