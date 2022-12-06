@@ -169,10 +169,12 @@ export default class IRMCtrl {
 
     init(hubChannel, updateStateCB)
     {
-        console.log(`IRMCtrl : init : Auth Mandatory:${configs.isIRMAuthModeEnabled()}`);
+        const authEnabled = configs.isIRMAuthModeEnabled();
 
         this.mInitCalled = true;
         this.mUpdateStateCB = updateStateCB;
+
+        console.log(`IRMCtrl : init : auth enabled:${authEnabled}`);
 
         if (this.mMAS)
         {
@@ -208,7 +210,7 @@ export default class IRMCtrl {
 
                 console.log(`IRMCtrl : init : received permissions update...`);
 
-                if (configs.isAdmin() || !configs.isIRMAuthModeEnabled())
+                if (configs.isAdmin() || !authEnabled)
                 {
                     this.setUser();
                 }
