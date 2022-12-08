@@ -1,71 +1,67 @@
-const MAS_Endpoint = {
-    authVerify      : ()   => "auth/verify",
-    rolePermissions : role => `permission/${role}`
-};
-
-const Header_X_API_KEY = "x-api-key";
-
-class ServiceMAS
+import Http from "../../../../manoweb/webpack/src/common/http-requester.mjs";
+class ServiceAPI
 {
-    constructor(apiDomain) {
-        this.mBaseUrl = `${apiDomain}/mas`;
+    constructor(apiDomain, authToken) {
+        this.mApiDomain = apiDomain;
+        this.mAuthToken = authToken;
+        this.mPath = {
+            masAuthVerify      : ()   => this.url("mas/auth/verify"),
+            masPermissionRole  : role => this.url(`mas/permission/${role}`),
+            metaverseLiveProbe : ()   => this.url("metaverse/live/probe")
+        };
     }
 
-    async authVerify(authToken, responseCB, errorCB)
-    {
-        this.post(MAS_Endpoint.authVerify(), {token:authToken}, responseCB, errorCB);
-    }
+    url(path) { return `${this.mApiDomain}/${path}`; }
 
-    async rolePermission(authToken, role, responseCB, errorCB)
-    {
-        this.get(MAS_Endpoint.rolePermissions(role), { [Header_X_API_KEY]: authToken }, responseCB, errorCB);
-    }
-
-    async post(path, bodyObj, responseCB, errorCB) {
-
-        this.request({
-            url     : `${this.mBaseUrl}/${path}`,
-            method  : 'POST',
-            headers : { "Content-Type": "application/json" },
-            body    : bodyObj
-        }, responseCB, errorCB);
-    }
-
-    async get(path, headers, responseCB, errorCB) {
-
-        this.request({
-            url     : `${this.mBaseUrl}/${path}`,
-            headers : headers,
-        }, responseCB, errorCB);
-    }
-
-    async request(requestConfig, reponseCB, errorCB)
+    async masAuthVerify()
     {
         try {
-            const response = await fetch(requestConfig.url, {
-              method: requestConfig.method ? requestConfig.method : "GET",
-              headers: requestConfig.headers ? requestConfig.headers : {},
-              body: requestConfig.body ? JSON.stringify(requestConfig.body) : null,
-            });
+            const req = Http.createPostReq(this.mPath.masAuthVerify())
+                .setHeaderContentTypeJson()
+                .setBodyJsonObj({"token":this.mAuthToken});
 
-            if (!response.ok) {
-                const text = await response.text();
-                throw Error(text);
-            }
-            const data = await response.json();
-            reponseCB(data);
-        } catch (err) {
-            console.log(`ServiceMAS : request failed:${JSON.stringify(requestConfig)}, reason:${err.message}`);
-            errorCB(err);
+            const result = await Http.request(req, Http.flags().PARSE_JSON);
+            return Http.checkResult(result);
+        } catch (e) {
+            console.log(`ServiceAPI : masAuthVerify : token:${this.mAuthToken}, error:${e.message})`);
+        }
+    }
+
+    async masPermissionRole(role)
+    {
+        try {
+            const req = Http.createGetReq(this.mPath.masPermissionRole(role))
+                .setHeaderXApiKey(this.mAuthToken);
+
+            const result = await Http.request(req, Http.flags().PARSE_JSON);
+            return Http.checkResult(result);
+        } catch (e) {
+            console.log(`ServiceAPI : masPermissionRole : role:${role}, error:${e.message})`);
+        }
+    }
+
+    async metaverseLiveProbe(nick, hubId, parentId)
+    {
+        try {
+            const req = Http.createPostReq(this.mPath.metaverseLiveProbe())
+                .setHeaderContentTypeJson()
+                .setHeaderXApiKey(this.mAuthToken)
+                .setBodyJsonObj({"nick":nick, "hub_id":hubId, "parent_id":parentId});
+
+            const result = Http.request(req, Http.flags().PARSE_JSON);
+            return Http.checkResult(result);
+        } catch (e) {
+            console.log(`ServiceAPI : metaverseLiveProbe : nick:${nick}, hubId:${hubId}, parentId:${parent}, error:${e.message})`);
         }
     }
 }
 
-export default function ServiceMAS_Module(apiDomain)
+export default function ServiceAPI_Module(apiDomain, authToken)
 {
-    const mas = new ServiceMAS(apiDomain);
+    const s = new ServiceAPI(apiDomain, authToken);
     return {
-        authVerify     : (authToken, responseCB, errorCB)       => { mas.authVerify(authToken, responseCB, errorCB) },
-        rolePermission : (authToken, role, responseCB, errorCB) => { mas.rolePermission(authToken, role, responseCB, errorCB); }
+        masAuthVerify      : async ()     => { return s.masAuthVerify() },
+        masPermissionRole  : async (role) => { return s.masPermissionRole(role); },
+        metaverseLiveProbe : async (nick, hubId, parentId) => { return s.metaverseLiveProbe(nick, hubId, parentId); }
     };
 }

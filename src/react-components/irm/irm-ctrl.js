@@ -1,5 +1,5 @@
 import IFrameInterface from "../../../../manoweb/webpack/src/metaverse/iframe-interface";
-import ServiceMAS_Module from "./service-apis";
+import ServiceAPI_Module from "./service-apis";
 import configs from "../../utils/configs";
 
 const App = window.AppInterface;
@@ -97,7 +97,7 @@ class UserPermissions
     }
 }
 
-const version = "0.0.0.4";
+const version = "0.0.0.5";
 
 const IRMAuthTokenKey = "irmAuthToken";
 const IRMApiDomainKey = "irmApiDomain";
@@ -115,34 +115,38 @@ export default class IRMCtrl {
             InvalidApiDomain : 4
         };
 
+        this.mURL = new URL(window.location.href);
+        this.mHubId = this.mURL.pathname.split('/')[1];
+        if (this.mHubId === "hub.html") {
+            this.mHubId = this.mURL.searchParams.get("hub_id");
+        }
+        this.mParentId = this.qsVal("parent_id");
+        this.mPingTimer = null;
+
         this.mNick = null;
-        this.mMAS = null;
+        this.mServiceAPI = null;
         this.mInitCalled = false;
 
         this.mPermissions = new UserPermissions();
-        this.mQueryParams = new URLSearchParams(location.search);
-
-        this.mAuthToken = this.qsVal("auth_token");
-        this.mAppScheme = this.qsVal("app_scheme");
 
         const appname   = this.qsVal("app_name");
-        this.mApiDomain = appname ? `https://${appname}-api.ip.tv` : this.qsVal("api_domain");
+        const apiDomain = appname ? `https://${appname}-api.ip.tv` : this.checkVal(this.qsVal("api_domain"), IRMApiDomainKey);
 
-        this.mAuthToken = this.checkVal(this.mAuthToken, IRMAuthTokenKey);
-        this.mAppScheme = this.checkVal(this.mAppScheme, IRMAppSchemeKey);
-        this.mApiDomain = this.checkVal(this.mApiDomain, IRMApiDomainKey);
+        const authToken = this.checkVal(this.qsVal("auth_token"), IRMAuthTokenKey);
 
-        if (this.mAuthToken && this.mApiDomain)
+        this.mAppScheme = this.checkVal(this.qsVal("app_scheme"), IRMAppSchemeKey);
+
+        if (authToken && apiDomain)
         {
-            const apiDomainParts = this.mApiDomain.split(".");
+            const apiDomainParts = apiDomain.split(".");
             if (apiDomainParts.length != 3 || apiDomainParts[1] != "ip" || apiDomainParts[2] != "tv") {
-                console.log(`IRMCtrl : invalid api domain:${this.mApiDomain}`);
+                console.log(`IRMCtrl : invalid api domain:${apiDomain}`);
                 this.leave(this.mLeaveReason.InvalidApiDomain);
             }
-            this.mMAS = ServiceMAS_Module(this.mApiDomain);
+            this.mServiceAPI = ServiceAPI_Module(apiDomain, authToken);
         }
 
-        console.log(`IRMCtrl : Loading client version ${version} [appname:${appname}, apiDomain:${this.mApiDomain}, authToken:${this.mAuthToken}, appScheme:${this.mAppScheme}]`);
+        console.log(`IRMCtrl : Loading client version ${version} [appname:${appname}, apiDomain:${apiDomain}, authToken:${authToken}, appScheme:${this.mAppScheme}, hubId:${this.mHubId}, parentId:${this.mParentId}]`);
 
         if (configs.inIframe())
         {
@@ -167,7 +171,31 @@ export default class IRMCtrl {
         return this.mInitCalled;
     }
 
-    init(hubChannel, updateStateCB)
+    startPing(nick) {
+        this.stopPing();
+
+        if (nick && this.mHubId && this.mParentId)
+        {
+            const intervalMs = 30000;
+            this.mPingTimer = setInterval( async() => {
+                console.log(`IRMCtrl : startPing : pinging (nick:${nick}, hubId:${this.mHubId}, parentId:${this.mParentId})`);
+                await this.mServiceAPI.metaverseLiveProbe(nick, this.mHubId, this.mParentId);
+            }, intervalMs);
+        }
+        else
+        {
+            console.log(`IRMCtrl : startPing : ignoring...`);
+        }
+    }
+
+    stopPing() {
+        if (this.mPingTimer) {
+            clearInterval(this.mPingTimer);
+            this.mPingTimer = null;
+        }
+    }
+
+    async init(hubChannel, updateStateCB)
     {
         const authEnabled = configs.isIRMAuthModeEnabled();
 
@@ -176,26 +204,30 @@ export default class IRMCtrl {
 
         console.log(`IRMCtrl : init : auth enabled:${authEnabled}`);
 
-        if (this.mMAS)
+        if (this.mServiceAPI)
         {
-            this.mMAS.authVerify(this.mAuthToken, response => {
+            let result = await this.mServiceAPI.masAuthVerify();
+            if (result)
+            {
+                console.log(`IRMCtrl : init : auth verify success:${JSON.stringify(result.body)}`);
+                const {nick, role} = result.body;
 
-                console.log(`IRMCtrl : init : auth verify success:${JSON.stringify(response)}`);
-
-                const {nick, role} = response;
-
-                this.mMAS.rolePermission(this.mAuthToken, role, response => {
-
-                    console.log(`IRMCtrl : init : got role permissions:${JSON.stringify(response)}`);
-
-                    this.setUser(response, nick);
-
-                }, err => {
+                result = await this.mServiceAPI.masPermissionRole(role);
+                if (result)
+                {
+                    console.log(`IRMCtrl : init : got role permissions:${JSON.stringify(result.body)}`);
+                    this.setUser(result.body, nick);
+                    this.startPing(nick);
+                }
+                else
+                {
                     this.leave(this.mLeaveReason.PermissionError);
-                });
-            }, err => {
+                }
+            }
+            else
+            {
                 this.leave(this.mLeaveReason.AuthError);
-            });
+            }
         }
         else if (configs.isAdmin())
         {
@@ -343,6 +375,8 @@ export default class IRMCtrl {
     {
         console.log(`IRMCtrl : leave : reason:${reason}`);
 
+        this.stopPing();
+
         const initialHRef = "/";
 
         let href = initialHRef;
@@ -379,7 +413,7 @@ export default class IRMCtrl {
 
     qsVal(key, defaultVal = null)
     {
-        const v = this.mQueryParams.get(key);
+        const v = this.mURL.searchParams.get(key);
         return v ? v : defaultVal;
     }
 
