@@ -1,5 +1,7 @@
 import nipplejs from "nipplejs";
 import styles from "./virtual-gamepad-controls.css";
+import {SpeechRecognitionCaptureModule} from "../../../manoweb/webpack/src/engine/speech/recognition";
+import configs from "../utils/configs";
 
 function insertAfter(el, referenceEl) {
   referenceEl.parentNode.insertBefore(el, referenceEl.nextSibling);
@@ -41,6 +43,8 @@ AFRAME.registerComponent("virtual-gamepad-controls", {
     this.rightMock.appendChild(this.rightMockSmall);
     this.mockJoystickContainer.appendChild(this.rightMock);
 
+    this.mProcessor = null;
+
     this.enableLeft = window.APP.store.state.preferences.enableOnScreenJoystickLeft;
     this.enableRight = window.APP.store.state.preferences.enableOnScreenJoystickRight;
     if (this.enableLeft || this.enableRight) {
@@ -65,6 +69,7 @@ AFRAME.registerComponent("virtual-gamepad-controls", {
     this.inVr = false;
     this.moving = false;
     this.rotating = false;
+    this.lastMoveTs = 0;
 
     this.displacement = new THREE.Vector3();
     this.lookDy = 0;
@@ -198,6 +203,14 @@ AFRAME.registerComponent("virtual-gamepad-controls", {
 
   tick() {
     if (this.inVr) {
+      if (this.moving) {
+        const ts = Date.now();
+        if (this.lastMoveTs == 0 || ts - this.lastMoveTs > 40)
+        {
+          this.characterController.enqueueRelativeMotion(this.displacement);
+          this.lastMoveTs = ts;
+        }
+      }
       return;
     }
     if (this.moving) {
@@ -210,17 +223,27 @@ AFRAME.registerComponent("virtual-gamepad-controls", {
   },
 
   onEnterVr() {
+    console.log("onEnterVR");
     // Hide the joystick controls
     this.inVr = true;
     if (this.leftTouchZone) this.leftTouchZone.style.display = "none";
     if (this.rightTouchZone) this.rightTouchZone.style.display = "none";
+
+    if (configs.VRVoiceMode)
+    {
+      this.startSpeechRecognition = this.startSpeechRecognition.bind(this);
+      this.startSpeechRecognition();
+    }
   },
 
   onExitVr() {
+    console.log("onExitVR");    
     // Show the joystick controls
     this.inVr = false;
     if (this.leftTouchZone) this.leftTouchZone.style.display = "block";
     if (this.rightTouchZone) this.rightTouchZone.style.display = "block";
+
+    this.stopSpeechRecognition();
   },
 
   remove() {
@@ -230,5 +253,52 @@ AFRAME.registerComponent("virtual-gamepad-controls", {
       this.mockJoystickContainer.parentNode.removeChild(this.mockJoystickContainer);
     if (this.leftTouchZone) this.leftTouchZone.parentNode.removeChild(this.leftTouchZone);
     if (this.rightTouchZone) this.rightTouchZone.parentNode.removeChild(this.rightTouchZone);
+  },
+
+  move(ahead = true) {
+    this.moving = true;
+    this.displacement.set(0, 0, ahead ? -1 : 1).multiplyScalar(1 * 1.85);
+  },
+
+  startSpeechRecognition()
+  {
+     console.log("startSpeechRecognition");
+
+     this.mProcessor = SpeechRecognitionCaptureModule();
+
+     const cfg = {
+         lang : "en-US",
+         continuous : false,
+         interimResults : false
+     };
+     this.mProcessor.start(cfg, (result) => {
+         // resultCB
+         console.log(`----- Result.text:${result.text} ------`);
+
+         switch (result.text) {
+         case "go ahead":
+           this.move(true);
+           break;
+         case "back":
+           this.move(false);
+           break;
+         case "stop":
+           this.moving = false;
+         }
+     }, (elapsedMs) => {
+         // watchdogCB
+         console.log(`startSpeechRecognition : speech recognition service inactive for ${elapsedMs} ms, reseting...`);
+         this.stopSpeechRecognition();
+         this.startSpeechRecognition();
+     });
+  },
+
+  stopSpeechRecognition()
+  {
+    if (this.mProcessor)
+    {
+      this.mProcessor.stop();
+      this.mProcessor = null;
+    }
   }
 });

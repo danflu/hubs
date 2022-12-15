@@ -139,6 +139,7 @@
 	"enter-on-device-modal.divider-label": "或者",
 	"enter-on-device-modal.download-firefox-button": "下載 Firefox",
 	"enter-on-device-modal.enter-in-vr-button": "使用VR進入",
+	"enter-on-device-modal.enter-in-vr-voice-button": "使用VR進入",
 	"enter-on-device-modal.generating-code": "產生加入密碼中...",
 	"enter-on-device-modal.heading": "用無線耳機加入",
 	"enter-on-device-modal.headset-connected-heading": "用有線耳機加入",
@@ -645,4 +646,3 @@
 	"webvr-unsupported-modal.webvr-rocks-link": "支援實驗VR的瀏覽器清單請見<a>WebVR Rocks</a>.",
 	"whats-new-page.title": "新消息"
 }
-   

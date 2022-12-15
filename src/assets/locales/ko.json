@@ -129,6 +129,7 @@
   "enter-on-device-modal.download-firefox-button": "Firefox 다운로드",
   "enter-on-device-modal.headset-connected-message": "VR헤드셋을 가지고 있다면 이 장치에 연결하세요.",
   "enter-on-device-modal.enter-in-vr-button": "VR로 입장하기",
+  "enter-on-device-modal.enter-in-vr-voice-button": "VR로 입장하기",
   "ui-root.interstitial-prompt": "계속하기",
   "more-menu.not-signed-in": "로그인이 되지 않았습니다.",
   "more-menu.you-signed-in-as": "{email} 로 로그인 되었습니다.",

@@ -15,6 +15,7 @@ import { FormattedMessage } from "react-intl";
 import { Popover } from "../popover/Popover";
 import { PermissionStatus } from "../../utils/media-devices-utils";
 import { Spinner } from "../misc/Spinner";
+import configs from "../../utils/configs";
 
 export function MicSetupModal({
   className,
@@ -51,6 +52,7 @@ export function MicSetupModal({
           />
         </p>
         <div className={styles.audioCheckContainer}>
+         {configs.VRVoiceMode === false && (
           <div className={styles.audioIoContainer}>
             <div className={styles.iconContainer}>
               <div>
@@ -139,6 +141,7 @@ export function MicSetupModal({
                 </div>
               )}
           </div>
+          )}
           <div className={styles.audioIoContainer}>
             <div className={styles.iconContainer}>
               <VolumeOffIcon className={styles.iconEnabled} style={{ marginRight: "5px" }} />

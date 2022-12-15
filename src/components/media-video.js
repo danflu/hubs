@@ -276,6 +276,15 @@ AFRAME.registerComponent("media-video", {
       return;
     }
 
+    //danflu: HACK: resuming video automatically when in voiceVR mode since mic capturing (for voice recognition) pauses video.
+    //console.log(`onPauseStateChange : paused:${this.video.paused}`);
+    if (configs.VRVoiceMode) {
+      if (this.video.paused) {
+        this.video.play();
+      }
+      return;
+    }
+
     // Used in the HACK in hub.js for dealing with auto-pause in Oculus Browser
     if (this._ignorePauseStateChanges) return;
 

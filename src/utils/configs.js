@@ -11,6 +11,7 @@ const configs = {};
 configs.showLandingPage = false;
 configs.enableReadyPlayer = true;
 configs.enableIRMAuthMode = true;
+configs.VRVoiceMode = false;
 
 const irmAuthModeEnabledParam = "irmAuthModeEnabled";
 const showEditAvatarParam     = "showEditAvatarReadyPlayer";

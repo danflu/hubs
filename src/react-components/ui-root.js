@@ -889,6 +889,14 @@ class UIRoot extends Component {
           this.state.linkCodeCancel();
           this.setState({ linkCode: null, linkCodeCancel: null });
           this.enterVR();
+          configs.VRVoiceMode = false;
+        }}
+        onEnterOnConnectedHeadsetVoice={() => {
+          // TODO: This is bad. linkCodeCancel should be tied to component lifecycle not these callback methods.
+          this.state.linkCodeCancel();
+          this.setState({ linkCode: null, linkCodeCancel: null });
+          this.enterVR();
+          configs.VRVoiceMode = true;
         }}
         onBack={() => {
           if (this.state.linkCodeCancel) {

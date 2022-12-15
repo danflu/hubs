@@ -2,6 +2,7 @@ import { EventEmitter } from "eventemitter3";
 import { MediaDevicesEvents, PermissionStatus, MediaDevices, NO_DEVICE_ID } from "./media-devices-utils";
 import { detectOS, detect } from "detect-browser";
 import { isIOS as detectIOS } from "./is-mobile";
+import configs from "./configs";
 
 const isMobile = AFRAME.utils.device.isMobile();
 const isIOS = detectIOS();
@@ -214,6 +215,8 @@ export default class MediaDevicesManager extends EventEmitter {
   }
 
   async startMicShare({ deviceId, unmute, updatePrefs = true }) {
+    // danflu: voice recognition do not work together with getUserMedia.
+    if (configs.VRVoiceMode) return;
     if (this.isMicShared && this.selectedMicDeviceId === deviceId) return;
     console.log("Starting microphone sharing");
 

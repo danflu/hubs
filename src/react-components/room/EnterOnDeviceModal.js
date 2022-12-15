@@ -16,6 +16,7 @@ export function EnterOnDeviceModal({
   headsetConnected,
   unsupportedBrowser,
   onEnterOnConnectedHeadset,
+  onEnterOnConnectedHeadsetVoice,  
   onBack,
   ...rest
 }) {
@@ -118,6 +119,12 @@ export function EnterOnDeviceModal({
                         <FormattedMessage id="enter-on-device-modal.enter-in-vr-button" defaultMessage="Enter in VR" />
                       </span>
                     </Button>
+                    <Button preset="accent5" onClick={onEnterOnConnectedHeadsetVoice}>
+                      <VRIcon />
+                      <span>
+                        <FormattedMessage id="enter-on-device-modal.enter-in-vr-voice-button" defaultMessage="Enter in Voice VR" />
+                      </span>
+                    </Button>
                   </>
                 )}
               </>
@@ -137,5 +144,6 @@ EnterOnDeviceModal.propTypes = {
   headsetConnected: PropTypes.bool,
   unsupportedBrowser: PropTypes.bool,
   onEnterOnConnectedHeadset: PropTypes.func,
+  onEnterOnConnectedHeadsetVoice: PropTypes.func,
   onBack: PropTypes.func
 };
