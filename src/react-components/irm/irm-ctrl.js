@@ -97,11 +97,13 @@ class UserPermissions
     }
 }
 
-const version = "0.0.0.5";
+const version = "0.0.0.7";
 
-const IRMAuthTokenKey = "irmAuthToken";
-const IRMApiDomainKey = "irmApiDomain";
-const IRMAppSchemeKey = "irmAppScheme";
+const QSParamAppName   = "app_name";
+const QSParamApiDomain = "api_domain";
+const QSParamAuthToken = "auth_token";
+const QSParamAppScheme = "app_scheme";
+const QSParamParentId  = "parent_id";
 
 export default class IRMCtrl {
 
@@ -120,7 +122,7 @@ export default class IRMCtrl {
         if (this.mHubId === "hub.html") {
             this.mHubId = this.mURL.searchParams.get("hub_id");
         }
-        this.mParentId = this.qsVal("parent_id");
+        this.mParentId = this.qsVal(QSParamParentId);
         this.mPingTimer = null;
 
         this.mNick = null;
@@ -129,12 +131,19 @@ export default class IRMCtrl {
 
         this.mPermissions = new UserPermissions();
 
-        const appname   = this.qsVal("app_name");
-        const apiDomain = appname ? `https://${appname}-api.ip.tv` : this.checkVal(this.qsVal("api_domain"), IRMApiDomainKey);
+        // maps query string key to local storage key
+        this.mKV = {};
+        this.mKV[QSParamAppName]   = "irmAppName";
+        this.mKV[QSParamApiDomain] = "irmApiDomain";
+        this.mKV[QSParamAuthToken] = "irmAuthToken";
+        this.mKV[QSParamAppScheme] = "irmAppScheme";
 
-        const authToken = this.checkVal(this.qsVal("auth_token"), IRMAuthTokenKey);
+        const appname   = this.checkVal(QSParamAppName);
+        const apiDomain = appname ? `https://${appname}-api.ip.tv` : this.checkVal(QSParamApiDomain);
 
-        this.mAppScheme = this.checkVal(this.qsVal("app_scheme"), IRMAppSchemeKey);
+        const authToken = this.checkVal(QSParamAuthToken);
+
+        this.mAppScheme = this.checkVal(QSParamAppScheme);
 
         if (authToken && apiDomain)
         {
@@ -157,12 +166,20 @@ export default class IRMCtrl {
         }
     }
 
-    checkVal(val, key) {
+    checkVal(qsKey) {
+        const lsKey = this.mKV[qsKey];
+        if (!lsKey) {
+            console.log(`IRMCtrl : checkVal : invalid qsKey:${qsKey}`);
+            return;
+        }
+
+        let val = this.qsVal(qsKey);
+
         if (val) {
-            localStorage.setItem(key, val);
+            localStorage.setItem(lsKey, val);
         } else {
-            val = localStorage.getItem(key);
-            console.log(`IRMCtrl : checkVal : Not set, checking stored key ${key} value:(${val})`);
+            val = localStorage.getItem(lsKey);
+            console.log(`IRMCtrl : checkVal : key:${qsKey} not in query string, checking localstorage ${lsKey} : (${val})`);
         }
         return val;
     }
