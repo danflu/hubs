@@ -111,7 +111,7 @@ export function PlacePopoverContainer({ scene, mediaSearchStore, showNonHistorie
         scene.removeEventListener("stateremoved", onSceneStateChange);
       };
     },
-    [hubChannel, mediaSearchStore, showNonHistoriedDialog, scene]
+    [hubChannel, mediaSearchStore, showNonHistoriedDialog, scene, irmCanUsePen, irmCanAddCamera, irmCanAddAvatar, irmCanAddScene, irmCanAddObjects, irmCanAddGIF]
   );
 
   return <PlacePopoverButton items={items} />;
