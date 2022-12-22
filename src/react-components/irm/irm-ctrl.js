@@ -97,18 +97,21 @@ class UserPermissions
     }
 }
 
-const version = "0.0.0.8";
+const version = "0.0.0.11";
 
 const QSParamAppName   = "app_name";
 const QSParamApiDomain = "api_domain";
 const QSParamAuthToken = "auth_token";
 const QSParamAppScheme = "app_scheme";
 const QSParamParentId  = "parent_id";
+const QSParamNick      = "nick";
 
 export default class IRMCtrl {
 
     constructor()
     {
+        console.log(`IRMCtrl : ${window.location.href}`);
+
         this.mLeaveReason = {
             UserLeft  : 0,
             AuthError : 1,
@@ -125,7 +128,6 @@ export default class IRMCtrl {
         this.mParentId = this.qsVal(QSParamParentId);
         this.mPingTimer = null;
 
-        this.mNick = null;
         this.mServiceAPI = null;
         this.mInitCalled = false;
 
@@ -137,9 +139,36 @@ export default class IRMCtrl {
         this.mKV[QSParamApiDomain] = "irmApiDomain";
         this.mKV[QSParamAuthToken] = "irmAuthToken";
         this.mKV[QSParamAppScheme] = "irmAppScheme";
+        this.mKV[QSParamNick]      = "irmNick";
 
-        const appname   = this.checkVal(QSParamAppName);
-        const apiDomain = appname ? `https://${appname}-api.ip.tv` : this.checkVal(QSParamApiDomain);
+        this.mNick = this.checkVal(QSParamNick);
+
+        let apiDomain = null;
+        const appname = this.qsVal(QSParamAppName);
+        if (appname)
+        {
+            apiDomain = this.appNameToApiDomain(appname);
+            localStorage.setItem(this.mKV[QSParamAppName], appname);
+            localStorage.removeItem(this.mKV[QSParamApiDomain]);
+        }
+        else
+        {
+            apiDomain = this.qsVal(QSParamApiDomain);
+            if (apiDomain)
+            {
+                localStorage.setItem(this.mKV[QSParamApiDomain], apiDomain);
+                localStorage.removeItem(this.mKV[QSParamAppName]);
+            }
+            else
+            {
+                const appname = this.checkVal(QSParamAppName);
+                if (appname) { apiDomain = this.appNameToApiDomain(appname); }
+                else
+                {
+                    apiDomain = this.checkVal(QSParamApiDomain);
+                }
+            }
+        }
 
         const authToken = this.checkVal(QSParamAuthToken);
 
@@ -164,6 +193,10 @@ export default class IRMCtrl {
                 this.leave();
             });
         }
+    }
+
+    appNameToApiDomain(appname) {
+        return `https://${appname}-api.ip.tv`;
     }
 
     checkVal(qsKey) {
@@ -275,7 +308,7 @@ export default class IRMCtrl {
 
     setUser(rolePermissions = null, nick = null)
     {
-        console.log("IRMCtrl : setUser");
+        console.log(`IRMCtrl : setUser, current nick:${this.mNick}`);
 
         if (rolePermissions)
         {
@@ -286,19 +319,16 @@ export default class IRMCtrl {
             this.setAllPermissions();
         }
 
-        if (!nick)
+        if (!this.mNick)
         {
-            nick = this.qsVal("nick");
-
             if (!nick)
             {
                 const baseNick = configs.isAdmin() ? "admin" : "guest";
-
                 nick = `${baseNick}${Date.now()}`;
             }
-        }
 
-        this.mNick = nick;
+            this.mNick = nick;
+        }
 
         this.updateState();
     }

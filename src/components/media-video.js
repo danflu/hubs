@@ -273,11 +273,12 @@ AFRAME.registerComponent("media-video", {
     // this.data.videoPaused is false (so others will keep playing it) but our local player will
     // have stopped. So we deal with this special case as well when we press the play button.
     if (isIOS && this.video.paused && this.isMineOrLocal()) {
+      console.log(`onPauseStateChange : not forwarding pause broadcast`);
       return;
     }
 
     //danflu: HACK: resuming video automatically when in voiceVR mode since mic capturing (for voice recognition) pauses video.
-    //console.log(`onPauseStateChange : paused:${this.video.paused}`);
+    console.log(`onPauseStateChange : paused:${this.video.paused}`);
     if (configs.VRVoiceMode) {
       if (this.video.paused) {
         this.video.play();
