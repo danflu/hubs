@@ -5,9 +5,9 @@ class ServiceAPI
         this.mApiDomain = apiDomain;
         this.mAuthToken = authToken;
         this.mPath = {
-            masAuthVerify      : ()   => this.url("mas/auth/verify"),
-            masPermissionRole  : role => this.url(`mas/permission/${role}`),
-            metaverseLiveProbe : ()   => this.url("metaverse/live/probe")
+            masAuthVerify      : ()     => this.url("mas/auth/verify"),
+            masPermissionRole  : role   => this.url(`mas/permission/${role}`),
+            roomMetaverseLiveProbe : () => this.url("room/metaverse/live/probe")
         };
     }
 
@@ -36,22 +36,22 @@ class ServiceAPI
             const result = await Http.request(req, Http.flags().PARSE_JSON);
             return Http.checkResult(result);
         } catch (e) {
-            console.log(`ServiceAPI : masPermissionRole : role:${role}, error:${e.message})`);
+            console.log(`ServiceAPI : masPermissionRole : token:${this.mAuthToken}, role:${role}, error:${e.message})`);
         }
     }
 
-    async metaverseLiveProbe(nick, hubId, parentId)
+    async roomMetaverseLiveProbe(hubId, parentId)
     {
         try {
-            const req = Http.createPostReq(this.mPath.metaverseLiveProbe())
+            const req = Http.createPostReq(this.mPath.roomMetaverseLiveProbe())
                 .setHeaderContentTypeJson()
                 .setHeaderXApiKey(this.mAuthToken)
-                .setBodyJsonObj({"nick":nick, "hub_id":hubId, "parent_id":parentId});
+                .setBodyJsonObj({"hub_id":hubId, "parent_id":parentId});
 
             const result = Http.request(req, Http.flags().PARSE_JSON);
             return Http.checkResult(result);
         } catch (e) {
-            console.log(`ServiceAPI : metaverseLiveProbe : nick:${nick}, hubId:${hubId}, parentId:${parent}, error:${e.message})`);
+            console.log(`ServiceAPI : roomMetaverseLiveProbe : token:${this.mAuthToken}, hubId:${hubId}, parentId:${parentId}, error:${e.message})`);
         }
     }
 }
@@ -62,6 +62,6 @@ export default function ServiceAPI_Module(apiDomain, authToken)
     return {
         masAuthVerify      : async ()     => { return s.masAuthVerify() },
         masPermissionRole  : async (role) => { return s.masPermissionRole(role); },
-        metaverseLiveProbe : async (nick, hubId, parentId) => { return s.metaverseLiveProbe(nick, hubId, parentId); }
+        roomMetaverseLiveProbe : async (hubId, parentId) => { return s.roomMetaverseLiveProbe(hubId, parentId); }
     };
 }

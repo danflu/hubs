@@ -97,7 +97,7 @@ class UserPermissions
     }
 }
 
-const version = "0.0.0.11";
+const version = "0.0.0.13";
 
 const QSParamAppName   = "app_name";
 const QSParamApiDomain = "api_domain";
@@ -221,15 +221,15 @@ export default class IRMCtrl {
         return this.mInitCalled;
     }
 
-    startPing(nick) {
+    startPing() {
         this.stopPing();
 
-        if (nick && this.mHubId && this.mParentId)
+        if (this.mHubId && this.mParentId)
         {
             const intervalMs = 30000;
             this.mPingTimer = setInterval( async() => {
-                console.log(`IRMCtrl : startPing : pinging (nick:${nick}, hubId:${this.mHubId}, parentId:${this.mParentId})`);
-                await this.mServiceAPI.metaverseLiveProbe(nick, this.mHubId, this.mParentId);
+                console.log(`IRMCtrl : startPing : pinging (nick:${this.mNick}, hubId:${this.mHubId}, parentId:${this.mParentId})`);
+                await this.mServiceAPI.roomMetaverseLiveProbe(this.mHubId, this.mParentId);
             }, intervalMs);
         }
         else
@@ -267,7 +267,7 @@ export default class IRMCtrl {
                 {
                     console.log(`IRMCtrl : init : got role permissions:${JSON.stringify(result.body)}`);
                     this.setUser(result.body, nick);
-                    this.startPing(nick);
+                    this.startPing();
                 }
                 else
                 {
