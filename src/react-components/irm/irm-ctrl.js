@@ -192,6 +192,10 @@ export default class IRMCtrl {
                 // onCloseCB
                 this.leave();
             });
+            this.clickEvt = () => {
+                this.mIFrameInterface.notifyUserClick();
+            };
+            document.addEventListener('click', this.clickEvt);
         }
     }
 
