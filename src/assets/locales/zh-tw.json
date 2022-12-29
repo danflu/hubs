@@ -521,7 +521,7 @@
 	"rtc-debug-panel.signaling-panel-title": "Signaling",
 	"rtc-debug-panel.stats-panel-title": "數據",
 	"rtc-debug-panel.track-panel-title": "Track",
-	"safari-mic-modal.message": "<p>Hubs requires microphone permissions in Safari.</p><p>Please reload and allow microphone access to continue.</p>",
+	"safari-mic-modal.message": "<p>Metaverse requires microphone permissions in Safari.</p><p>Please reload and allow microphone access to continue.</p>",
 	"safari-mic-modal.reload-button": "重新讀取",
 	"safari-mic-modal.title": "需要麥克風存取",
 	"save-api-token.copied": "已複製",

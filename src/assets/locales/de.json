@@ -473,7 +473,7 @@
   "room-sidebar.scene-info.title": "Szene",
   "room-sidebar.title": "Raum",
   "room-sidebar.unknown": "unbekannt",
-  "safari-mic-modal.message": "<p>Hubs erfordert Mikrofonrechte in Safari.</p><p>Bitte lade die Seite neu und erlaube den Mikrofonzugriff, um fortzufahren.</p>",
+  "safari-mic-modal.message": "<p>Metaverse erfordert Mikrofonrechte in Safari.</p><p>Bitte lade die Seite neu und erlaube den Mikrofonzugriff, um fortzufahren.</p>",
   "safari-mic-modal.reload-button": "Neu laden",
   "safari-mic-modal.title": "Zugriff auf das Mikrofon erforderlich",
   "save-api-token.copied": "Kopiert",

@@ -512,7 +512,7 @@
   "rtc-debug-panel.signaling-panel-title": "Signaling",
   "rtc-debug-panel.stats-panel-title": "Stats",
   "rtc-debug-panel.track-panel-title": "Track",
-  "safari-mic-modal.message": "<p>Hubs nécessite les permissions du micro dans Safari.</p><p>Pour continuer, merci de recharger la page et d'autoriser l'accès au micro.</p>",
+  "safari-mic-modal.message": "<p>Métaverse nécessite les permissions du micro dans Safari.</p><p>Pour continuer, merci de recharger la page et d'autoriser l'accès au micro.</p>",
   "safari-mic-modal.reload-button": "Recharger",
   "safari-mic-modal.title": "Accès au micro requis",
   "save-api-token.copied": "Copié",

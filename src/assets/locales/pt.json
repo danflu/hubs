@@ -518,7 +518,7 @@
   "rtc-debug-panel.signaling-panel-title": "Signaling",
   "rtc-debug-panel.stats-panel-title": "Stats",
   "rtc-debug-panel.track-panel-title": "Track",
-  "safari-mic-modal.message": "<p>O Hubs solicita permissão ao seu microfone no Safari.</p><p>Por favor, recarregue a página e conceda acesso ao seu microfone</p>",
+  "safari-mic-modal.message": "<p>O metaverso solicita permissão ao seu microfone no Safari.</p><p>Por favor, recarregue a página e conceda acesso ao seu microfone</p>",
   "safari-mic-modal.reload-button": "Recarregar",
   "safari-mic-modal.title": "Acesso ao microfone solicitado",
   "save-api-token.copied": "Copiado",
