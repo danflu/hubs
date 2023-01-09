@@ -13,11 +13,11 @@ export function LoadingScreen({ message, infoMessages }) {
           <p>{message}</p>
         </>
       }
-      bottom={<></>/*
+      bottom={
         <>
           <h3>{infoMessage.heading}</h3>
           <p>{infoMessage.message}</p>
-        </>*/
+        </>
       }
     />
   );
