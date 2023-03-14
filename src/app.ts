@@ -10,6 +10,7 @@ import type { AElement, AScene } from "aframe";
 import HubChannel from "./utils/hub-channel";
 import MediaDevicesManager from "./utils/media-devices-manager";
 
+import { EffectComposer, EffectPass } from "postprocessing";
 import {
   Audio,
   AudioListener,
@@ -21,13 +22,15 @@ import {
   WebGLRenderer
 } from "three";
 import { AudioSettings, SourceType } from "./components/audio-params";
+import { createEffectsComposer } from "./effects";
 import { DialogAdapter } from "./naf-dialog-adapter";
 import { mainTick } from "./systems/hubs-systems";
 import { waitForPreloads } from "./utils/preload";
+import SceneEntryManager from "./scene-entry-manager";
+import { store } from "./utils/store-instance";
 
 declare global {
   interface Window {
-    $B: typeof bitecs;
     $O: (eid: number) => Object3D | undefined;
     APP: App;
   }
@@ -49,14 +52,22 @@ export interface HubsWorld extends IWorld {
   time: { delta: number; elapsed: number; tick: number };
 }
 
-window.$B = bitecs;
+let resolvePromiseToScene: (value: Scene) => void;
+const promiseToScene: Promise<Scene> = new Promise(resolve => {
+  resolvePromiseToScene = resolve;
+});
+export function getScene() {
+  return promiseToScene;
+}
 
 export class App {
   scene?: AScene;
   hubChannel?: HubChannel;
   mediaDevicesManager?: MediaDevicesManager;
+  entryManager?: SceneEntryManager;
+  messageDispatch?: any;
+  store: Store;
 
-  store = new Store();
   mediaSearchStore = new MediaSearchStore();
 
   audios = new Map<AElement | number, PositionalAudio | Audio>();
@@ -70,6 +81,7 @@ export class App {
   isAudioPaused = new Set<AElement | number>();
   audioDebugPanelOverrides = new Map<SourceType, AudioSettings>();
   sceneAudioDefaults = new Map<SourceType, AudioSettings>();
+  moderatorAudioSource = new Set<AElement | number>();
 
   world: HubsWorld = createWorld();
 
@@ -87,7 +99,14 @@ export class App {
     CURSOR: 3
   };
 
+  fx: {
+    composer?: EffectComposer;
+    bloomAndTonemapPass?: EffectPass;
+    tonemapOnlyPass?: EffectPass;
+  } = {};
+
   constructor() {
+    this.store = store;
     // TODO: Create accessor / update methods for these maps / set
     this.world.eid2obj = new Map();
 
@@ -121,7 +140,7 @@ export class App {
       this.sid2str.set(sid, str);
       return sid;
     }
-    return this.str2sid.get(str);
+    return this.str2sid.get(str)!;
   }
 
   getString(sid: number) {
@@ -142,19 +161,19 @@ export class App {
       event.preventDefault();
     });
 
+    const enablePostEffects = this.store.state.preferences.enablePostEffects;
+
     const renderer = new WebGLRenderer({
-      // TODO we should not be using alpha: false https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#avoid_alphafalse_which_can_be_expensive
       alpha: true,
-      antialias: true,
-      depth: true,
-      stencil: true,
-      premultipliedAlpha: true,
-      preserveDrawingBuffer: false,
-      logarithmicDepthBuffer: false,
-      // TODO we probably want high-performance
+      antialias: !enablePostEffects,
+      depth: !enablePostEffects,
+      stencil: false,
       powerPreference: "high-performance",
       canvas
     });
+
+    // We manually handle resetting this in mainTick so that stats are correctly reported with post effects enabled
+    renderer.info.autoReset = false;
 
     renderer.setPixelRatio(window.devicePixelRatio);
 
@@ -178,14 +197,29 @@ export class App {
       tick: 0
     };
 
-    this.world.scene = sceneEl.object3D;
+    this.scene = sceneEl;
+    const scene = sceneEl.object3D;
+    this.world.scene = scene;
+    resolvePromiseToScene(scene);
+
+    // We manually call scene.updateMatrixWolrd in mainTick
+    scene.autoUpdate = false;
+
+    if (enablePostEffects) {
+      this.fx = createEffectsComposer(canvas, renderer, camera, scene, sceneEl, this.store);
+    } else {
+      // EffectComposer manages renderer size internally
+      (sceneEl as any).addEventListener("rendererresize", function ({ detail }: { detail: DOMRectReadOnly }) {
+        renderer.setSize(detail.width, detail.height, false);
+      });
+    }
 
     // This gets called after all system and component init functions
     sceneEl.addEventListener("loaded", () => {
       waitForPreloads().then(() => {
         this.world.time.elapsed = performance.now();
         renderer.setAnimationLoop(function (_rafTime, xrFrame) {
-          mainTick(xrFrame, renderer, sceneEl.object3D, camera);
+          mainTick(xrFrame, renderer, scene, camera);
         });
         sceneEl.renderStarted = true;
       });

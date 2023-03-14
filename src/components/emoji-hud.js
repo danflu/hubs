@@ -3,7 +3,7 @@ import { TYPE } from "three-ammo/constants";
 import { HandCollisionTarget } from "../bit-components";
 import { emojis } from "./emoji";
 
-const COLLISION_LAYERS = require("../constants").COLLISION_LAYERS;
+import { COLLISION_LAYERS } from "../constants";
 
 function setOffsetVector(i, totalNumEmojis, width, spacing, offsetVector) {
   const sign = i & 1 ? -1 : 1;
@@ -33,7 +33,7 @@ AFRAME.registerComponent("emoji-hud", {
   init: (() => {
     const cameraWorldPosition = new THREE.Vector3();
     const offsetVector = new THREE.Vector3();
-    return function() {
+    return function () {
       this._onFrozen = this._onFrozen.bind(this);
       this._onThaw = this._onThaw.bind(this);
 
@@ -129,13 +129,13 @@ AFRAME.registerComponent("emoji-hud", {
     }
   },
 
-  _updateOffset: (function() {
+  _updateOffset: (function () {
     const targetWorldPos = new THREE.Vector3();
     const cameraForward = new THREE.Vector3();
     const projectedCameraForward = new THREE.Vector3();
     const angledCameraForward = new THREE.Vector3();
     const defaultRight = new THREE.Vector3(1, 0, 0);
-    return function() {
+    return function () {
       const obj = this.el.object3D;
       const cameraObject3D = this.data.camera.object3D;
       cameraObject3D.updateMatrices();

@@ -1,4 +1,3 @@
-/* global require AFRAME THREE setTimeout clearTimeout */
 import { addMedia } from "../utils/media-utils";
 import { waitForEvent } from "../utils/async-utils";
 import { ObjectContentOrigins } from "../object-types";
@@ -6,8 +5,7 @@ import { paths } from "../systems/userinput/paths";
 import { getBox, getScaleCoefficient } from "../utils/auto-box-collider";
 import { addComponent } from "bitecs";
 import { Held, HeldRemoteLeft, HeldRemoteRight } from "../bit-components";
-
-const COLLISION_LAYERS = require("../constants").COLLISION_LAYERS;
+import { COLLISION_LAYERS } from "../constants";
 
 function setNonNullVec3Components(target, values) {
   target.set(

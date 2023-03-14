@@ -1,5 +1,4 @@
-/* global NAF */
-const COLLISION_LAYERS = require("../constants").COLLISION_LAYERS;
+import { COLLISION_LAYERS } from "../constants";
 
 AFRAME.registerComponent("set-unowned-body-kinematic", {
   init() {

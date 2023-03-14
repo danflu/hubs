@@ -1,23 +1,4 @@
-import { defineQuery, hasComponent } from "bitecs";
 import { $isStringType, NetworkedMediaFrame } from "../bit-components";
-import { findAncestor } from "./three-utils";
-
-const queries = new Map();
-export function anyEntityWith(world, component) {
-  if (!queries.has(component)) {
-    queries.set(component, defineQuery([component]));
-  }
-
-  const eids = queries.get(component)(world);
-  return eids.length && eids[0];
-}
-
-export function hasAnyComponent(world, components, eid) {
-  for (let i = 0; i < components.length; i++) {
-    if (hasComponent(world, components[i], eid)) return true;
-  }
-  return false;
-}
 
 // TODO HACK gettting internal bitecs symbol, should expose createShadow
 const $parentArray = Object.getOwnPropertySymbols(NetworkedMediaFrame.scale).find(s => s.description == "parentArray");
@@ -46,7 +27,7 @@ export function defineNetworkSchema(Component) {
   });
 
   return {
-    serialize(_world, eid, data, isFullSync = false) {
+    serialize(_world, eid, data, isFullSync, writeToShadow) {
       const changedPids = [];
       data.push(changedPids);
       for (let pid = 0; pid < componentProps.length; pid++) {
@@ -62,14 +43,14 @@ export function defineNetworkSchema(Component) {
               break;
             }
           }
-          if (!isFullSync) shadow[eid].set(prop[eid]);
+          if (writeToShadow) shadow[eid].set(prop[eid]);
         } else {
           if (isFullSync || shadow[eid] !== prop[eid]) {
             changedPids.push(pid);
             // TODO handle EID type
             data.push(prop[$isStringType] ? APP.getString(prop[eid]) : prop[eid]);
           }
-          if (!isFullSync) shadow[eid] = prop[eid];
+          if (writeToShadow) shadow[eid] = prop[eid];
         }
       }
       if (!changedPids.length) {
@@ -96,9 +77,4 @@ export function defineNetworkSchema(Component) {
       }
     }
   };
-}
-
-export function findAncestorEntity(world, eid, predicate) {
-  const obj = findAncestor(world.eid2obj.get(eid), o => o.eid && predicate(o.eid));
-  return obj && obj.eid;
 }

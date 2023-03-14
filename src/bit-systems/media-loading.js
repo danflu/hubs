@@ -4,27 +4,28 @@ import { easeOutQuadratic } from "../utils/easing";
 import { loadImage } from "../utils/load-image";
 import { loadVideo } from "../utils/load-video";
 import { loadModel } from "../utils/load-model";
-import { MediaType, resolveMediaInfo } from "../utils/media-utils";
-import { defineQuery, enterQuery, exitQuery, hasComponent, removeComponent, removeEntity } from "bitecs";
-import { MediaLoader, Networked } from "../bit-components";
+import { MediaType, mediaTypeName, resolveMediaInfo } from "../utils/media-utils";
+import { addComponent, defineQuery, enterQuery, exitQuery, hasComponent, removeComponent, removeEntity } from "bitecs";
+import { MediaLoader, Networked, ObjectMenuTarget } from "../bit-components";
 import { crTimeout, crClearTimeout, cancelable, coroutine, makeCancelable } from "../utils/coroutine";
-import { takeOwnership } from "../systems/netcode";
+import { takeOwnership } from "../utils/take-ownership";
 import { renderAsEntity } from "../utils/jsx-entity";
 import { animate } from "../utils/animate";
 
 const loaderForMediaType = {
   [MediaType.IMAGE]: (world, { accessibleUrl, contentType }) => loadImage(world, accessibleUrl, contentType),
   [MediaType.VIDEO]: (world, { accessibleUrl }) => loadVideo(world, accessibleUrl),
-  [MediaType.MODEL]: (world, { accessibleUrl }) => loadModel(world, accessibleUrl)
+  [MediaType.MODEL]: (world, { accessibleUrl }) => loadModel(world, accessibleUrl, true)
 };
 
 export const MEDIA_LOADER_FLAGS = {
   RECENTER: 1 << 0,
-  RESIZE: 1 << 1
+  RESIZE: 1 << 1,
+  ANIMATE_LOAD: 1 << 2,
+  IS_OBJECT_MENU_TARGET: 1 << 3
 };
 
-function assignNetworkIds(world, mediaEid, mediaLoaderEid) {
-  const rootNid = APP.getString(Networked.id[mediaLoaderEid]);
+export function assignNetworkIds(world, rootNid, mediaEid, mediaLoaderEid) {
   let i = 0;
   world.eid2obj.get(mediaEid).traverse(function (obj) {
     if (obj.eid && hasComponent(world, Networked, obj.eid)) {
@@ -99,10 +100,21 @@ function* animateScale(world, media) {
   });
 }
 
-function add(world, child, parent) {
+// TODO: Move to bit utils and rename
+export function add(world, child, parent) {
   const parentObj = world.eid2obj.get(parent);
   const childObj = world.eid2obj.get(child);
   parentObj.add(childObj);
+}
+
+class UnsupportedMediaTypeError extends Error {
+  constructor(eid, mediaType) {
+    super();
+    this.name = "UnsupportedMediaTypeError";
+    this.message = `Cannot load media for entity ${eid}. No loader for media type ${mediaType} (${mediaTypeName(
+      mediaType
+    )}).`;
+  }
 }
 
 function* loadMedia(world, eid) {
@@ -116,7 +128,11 @@ function* loadMedia(world, eid) {
   let media;
   try {
     const urlData = yield resolveMediaInfo(src);
-    media = yield* loaderForMediaType[urlData.mediaType](world, urlData);
+    const loader = loaderForMediaType[urlData.mediaType];
+    if (!loader) {
+      throw new UnsupportedMediaTypeError(eid, urlData.mediaType);
+    }
+    media = yield* loader(world, urlData);
   } catch (e) {
     console.error(e);
     media = renderAsEntity(world, ErrorObject());
@@ -129,10 +145,15 @@ function* loadMedia(world, eid) {
 function* loadAndAnimateMedia(world, eid, signal) {
   const { value: media, canceled } = yield* cancelable(loadMedia(world, eid), signal);
   if (!canceled) {
-    assignNetworkIds(world, media, eid);
+    assignNetworkIds(world, APP.getString(Networked.id[eid]), media, eid);
     resizeAndRecenter(world, media, eid);
+    if (MediaLoader.flags[eid] & MEDIA_LOADER_FLAGS.IS_OBJECT_MENU_TARGET) {
+      addComponent(world, ObjectMenuTarget, eid);
+    }
     add(world, media, eid);
-    yield* animateScale(world, media);
+    if (MediaLoader.flags[eid] & MEDIA_LOADER_FLAGS.ANIMATE_LOAD) {
+      yield* animateScale(world, media);
+    }
     removeComponent(world, MediaLoader, eid);
   }
 }

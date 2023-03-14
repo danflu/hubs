@@ -19,14 +19,13 @@ import { MyCameraTool } from "../../bit-components";
 export function PlacePopoverContainer({ scene, mediaSearchStore, showNonHistoriedDialog, hubChannel, irmCanUsePen, irmCanAddCamera, irmCanAddAvatar, irmCanAddScene, irmCanAddObjects, irmCanAddGIF }) {
   const [items, setItems] = useState([]);
 
-  useEffect(
-    () => {
-      function updateItems() {
-        const hasActiveCamera = !!anyEntityWith(APP.world, MyCameraTool);
-        const hasActivePen = !!scene.systems["pen-tools"].getMyPen();
+  useEffect(() => {
+    function updateItems() {
+      const hasActiveCamera = !!anyEntityWith(APP.world, MyCameraTool);
+      const hasActivePen = !!scene.systems["pen-tools"].getMyPen();
 
         let nextItems = [
-          hubChannel.can("spawn_drawing") && irmCanUsePen && {
+          hubChannel.can("spawn_drawing") &&  irmCanUsePen && {
             id: "pen",
             icon: PenIcon,
             color: "accent5",
@@ -89,21 +88,21 @@ export function PlacePopoverContainer({ scene, mediaSearchStore, showNonHistorie
           ];
         }
 
-        setItems(nextItems);
+      setItems(nextItems);
+    }
+
+    hubChannel.addEventListener("permissions_updated", updateItems);
+
+    updateItems();
+
+    function onSceneStateChange(event) {
+      if (event.detail === "camera" || event.detail === "pen") {
+        updateItems();
       }
+    }
 
-      hubChannel.addEventListener("permissions_updated", updateItems);
-
-      updateItems();
-
-      function onSceneStateChange(event) {
-        if (event.detail === "camera" || event.detail === "pen") {
-          updateItems();
-        }
-      }
-
-      scene.addEventListener("stateadded", onSceneStateChange);
-      scene.addEventListener("stateremoved", onSceneStateChange);
+    scene.addEventListener("stateadded", onSceneStateChange);
+    scene.addEventListener("stateremoved", onSceneStateChange);
 
       return () => {
         hubChannel.removeEventListener("permissions_updated", updateItems);
