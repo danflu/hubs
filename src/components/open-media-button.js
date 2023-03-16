@@ -48,7 +48,8 @@ AFRAME.registerComponent("open-media-button", {
       let hubId;
       if (this.data.onlyOpenLink) {
         await exitImmersive();
-        window.open(this.src);
+        if (!window.irmCtrl.handleLink(this.src))
+            window.open(this.src);
       } else if (await isLocalHubsAvatarUrl(this.src)) {
         const avatarId = new URL(this.src).pathname.split("/").pop();
         window.APP.store.update({ profile: { avatarId } });
@@ -70,7 +71,8 @@ AFRAME.registerComponent("open-media-button", {
         }
       } else {
         await exitImmersive();
-        window.open(this.src);
+        if (!window.irmCtrl.handleLink(this.src))
+            window.open(this.src);
       }
     };
 

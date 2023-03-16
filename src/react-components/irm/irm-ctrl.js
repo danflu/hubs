@@ -2,6 +2,8 @@ import IFrameInterface from "../../../../manoweb/webpack/src/metaverse/iframe-in
 import ServiceAPI_Module from "./service-apis";
 import configs from "../../utils/configs";
 
+import {Buffer} from 'buffer';
+
 const App = window.AppInterface;
 
 class UserPermissions
@@ -97,7 +99,7 @@ class UserPermissions
     }
 }
 
-const version = "0.0.0.13";
+const version = "0.1.15";
 
 const QSParamAppName   = "app_name";
 const QSParamApiDomain = "api_domain";
@@ -251,6 +253,10 @@ export default class IRMCtrl {
 
     async init(hubChannel, updateStateCB)
     {
+        // setTimeout( () => {
+        //     this.handleLink("https://iptv.smileandlearn.com/game/VERTEBRATEBIRDS/index.html?l4ngs=pDTNcdpFukpjC6Xy/x5i0A==");
+        // }, 5000);
+
         const authEnabled = configs.isIRMAuthModeEnabled();
 
         this.mInitCalled = true;
@@ -472,5 +478,53 @@ export default class IRMCtrl {
     {
         console.log(`IRMCtrl : setHref : ${href}`);
         window.location.href = href;
+    }
+
+    handleLink(src)
+    {
+        return false;
+        const url = new URL(src);
+        if (url.hostname === "iptv.smileandlearn.com")
+        {
+            const process = (str) => {
+                if (!str) return null;
+                // transform to base64 and replace some chars
+                const b64 = Buffer.from(str).toString('base64');
+                //to decode:
+                //Buffer.from(base64data, 'base64').toString('ascii')
+
+                // “+” is replaced by “-“.
+                // “/” is replaced by “_”.
+                // “=” is replaced by “,”.
+                const chars = {
+                    '+': '-',
+                    '/': '_',
+                    '=': ','
+                };
+                const res = b64.replace(/[+\/=]/g, m => chars[m]);
+                return res;
+            }
+            //API parameters:
+            const lt1   = "bAQOXdmdLEqDAHFatp3QrJakN0T7EUXrAPG/2JLYOLGM7IEwL+s5CTFe8OspCThfGOsPHoorxie8NJAm0k095A==";
+            const ap1k  = process("uaC04ssGeZ3wQ4FKG7PzsFydIsfvHL92");
+            const lms   = process("api");
+            const w4ddr = process("https://gc-sigma.ip.tv:8444/webhook");
+
+            const hasQS = url.search.length > 0 ? true : false;
+            if (hasQS) src += "&";
+            else       src += "?";
+            src += `lt1=${lt1}&ap1k=${ap1k}&lms=${lms}&w4ddr=${w4ddr}`;
+
+            //Custom parameters: set by the caller (the client) to introduce custom fields that are delivered to the callback.
+            //The client can include custom parameters, that will be sent “as is” to the callback URL.
+            //All these parameters must be encoded in Base64Url format.
+            const authToken = process(this.checkVal(QSParamAuthToken));
+            if (authToken) src += `&authToken=${authToken}`;
+
+            console.log(`IRMCtrl : handleLink : opening:${src}`);
+            window.open(src);
+            return true;
+        }
+        return false;
     }
 }
