@@ -482,7 +482,16 @@ export default class IRMCtrl {
 
     handleLink(src)
     {
+        if (this.mIFrameInterface)
+        {
+            this.mIFrameInterface.notifyOpenLink(src);
+        }
         return false;
+    }
+
+    /*
+    handleLink(src)
+    {
         const url = new URL(src);
         if (url.hostname === "iptv.smileandlearn.com")
         {
@@ -526,5 +535,5 @@ export default class IRMCtrl {
             return true;
         }
         return false;
-    }
+    }*/
 }
