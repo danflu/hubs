@@ -4,7 +4,7 @@ import configs from "../../utils/configs";
 
 import {Buffer} from 'buffer';
 
-const App = window.AppInterface;
+//const App = window.AppInterface;
 
 class UserPermissions
 {
@@ -99,14 +99,17 @@ class UserPermissions
     }
 }
 
-const version = "0.1.15";
+const version = "0.1.18";
 
-const QSParamAppName   = "app_name";
-const QSParamApiDomain = "api_domain";
-const QSParamAuthToken = "auth_token";
-const QSParamAppScheme = "app_scheme";
-const QSParamParentId  = "parent_id";
-const QSParamNick      = "nick";
+const QSParamAppName    = "app_name";
+const QSParamApiDomain  = "api_domain";
+const QSParamAuthToken  = "auth_token";
+const QSParamAppScheme  = "app_scheme";
+const QSParamParentId   = "parent_id";
+const QSParamNick       = "nick";
+const QSParamFlags      = "flags";
+
+const QSFlagNotifyLinks = 0x01;
 
 export default class IRMCtrl {
 
@@ -142,8 +145,17 @@ export default class IRMCtrl {
         this.mKV[QSParamAuthToken] = "irmAuthToken";
         this.mKV[QSParamAppScheme] = "irmAppScheme";
         this.mKV[QSParamNick]      = "irmNick";
+        this.mKV[QSParamFlags]     = "irmFlags";
 
+        this.mFlags = 0;
         this.mNick = this.checkVal(QSParamNick);
+        let flags = this.checkVal(QSParamFlags);
+        if (flags)
+        {
+            flags = parseInt(flags);
+            if (Number.isInteger(flags) && flags > 0) 
+                this.mFlags = flags;
+        }
 
         let apiDomain = null;
         const appname = this.qsVal(QSParamAppName);
@@ -186,7 +198,7 @@ export default class IRMCtrl {
             this.mServiceAPI = ServiceAPI_Module(apiDomain, authToken);
         }
 
-        console.log(`IRMCtrl : Loading client version ${version} [appname:${appname}, apiDomain:${apiDomain}, authToken:${authToken}, appScheme:${this.mAppScheme}, hubId:${this.mHubId}, parentId:${this.mParentId}]`);
+        console.log(`IRMCtrl : Loading client version ${version} [appname:${appname}, apiDomain:${apiDomain}, authToken:${authToken}, appScheme:${this.mAppScheme}, hubId:${this.mHubId}, parentId:${this.mParentId}], flags:${this.mFlags}`);
 
         if (configs.inIframe())
         {
@@ -253,10 +265,6 @@ export default class IRMCtrl {
 
     async init(hubChannel, updateStateCB)
     {
-        // setTimeout( () => {
-        //     this.handleLink("https://iptv.smileandlearn.com/game/VERTEBRATEBIRDS/index.html?l4ngs=pDTNcdpFukpjC6Xy/x5i0A==");
-        // }, 5000);
-
         const authEnabled = configs.isIRMAuthModeEnabled();
 
         this.mInitCalled = true;
@@ -391,7 +399,9 @@ export default class IRMCtrl {
                         url.pathname === "/x7EJ8dE" ||
                         url.pathname === "/6GksLy5" ||
                         url.pathname === "/tmg7t6Y" ||
-                        url.pathname === "/dzAB8Xa")
+                        url.pathname === "/dzAB8Xa" ||
+                        url.pathname === "/NLUUnNw" ||
+                        url.pathname === "/iyCM2C9")
                         {
                             ret = true;
                         }
@@ -442,10 +452,10 @@ export default class IRMCtrl {
         {
             this.mIFrameInterface.notifyClose(reason);
         }
-        else if (App)
-        {
-            App.close(reason);
-        }
+        //else if (App)
+        //{
+        //    App.close(reason);
+        //}
         else if (this.mAppScheme)
         {
             // security measure to force redirect anyway...
@@ -453,7 +463,7 @@ export default class IRMCtrl {
                 console.log('IRMCtrl : leave : leaving...');
                 this.setHref(initialHRef);
             }, 1000);
-            href = (`${this.mAppScheme}://closeMetaverse?reason=${reason}`);
+            href = `${this.mAppScheme}://closeMetaverse?reason=${reason}`;
         }
         this.setHref(href);
     }
@@ -482,11 +492,24 @@ export default class IRMCtrl {
 
     handleLink(src)
     {
-        if (this.mIFrameInterface)
+        let ret = false;
+
+        if ((this.mFlags & QSFlagNotifyLinks) === QSFlagNotifyLinks)
         {
-            this.mIFrameInterface.notifyOpenLink(src);
+            if (this.mIFrameInterface)
+            {
+                this.mIFrameInterface.notifyOpenLink(src);
+                ret = true;
+            }
+            else if (this.mAppScheme)
+            {
+                const type = 0;
+                const href = `${this.mAppScheme}://openLink?type=${type}&url=${encodeURIComponent(src)}`;
+                this.setHref(href);
+                ret = true;
+            }
         }
-        return false;
+        return ret;
     }
 
     /*
