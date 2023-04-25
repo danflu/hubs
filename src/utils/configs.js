@@ -12,6 +12,7 @@ configs.showLandingPage = false;
 configs.enableReadyPlayer = true;
 configs.enableIRMAuthMode = true;
 configs.VRVoiceMode = false;
+configs.skipJoinAudioModal = true;
 
 const irmAuthModeEnabledParam = "irmAuthModeEnabled";
 const showEditAvatarParam     = "showEditAvatarReadyPlayer";

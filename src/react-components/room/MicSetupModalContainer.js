@@ -1,4 +1,5 @@
-import React from "react";
+import configs from "../../utils/configs";
+import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import { MicSetupModal } from "./MicSetupModal";
 import { useMicrophoneStatus } from "./useMicrophoneStatus";
@@ -29,6 +30,29 @@ export function MicSetupModalContainer({ scene, ...rest }) {
       preferences: { muteMicOnEntry: muted }
     });
   }, []);
+
+  // danflu: check if we should skip 'join audio modal'.
+  useEffect( () => {
+    let timer = null;
+    if (configs.skipJoinAudioModal)
+    {
+      // wait 1 second to avoid error message "Tried to toggle mic but there's no producer."
+      timer = setTimeout( () => {
+        ({...rest}).onEnterRoom();
+      }, 1000);
+    }
+    return () => {
+      if (timer)
+      {
+        clearTimeout(timer);
+      }
+    };
+  }, []);
+
+  if (configs.skipJoinAudioModal)
+  {
+    return <></>;
+  }
 
   return (
     <MicSetupModal
