@@ -1,6 +1,6 @@
 import nipplejs from "nipplejs";
 import styles from "./virtual-gamepad-controls.css";
-import {SpeechRecognitionCaptureModule} from "../../../manoweb/webpack/src/engine/speech/recognition";
+import {SpeechRecognitionCaptureModule} from "../../../web-util/engine/speech/recognition";
 import configs from "../utils/configs";
 
 function insertAfter(el, referenceEl) {

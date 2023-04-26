@@ -1,9 +1,8 @@
-import IFrameInterface from "../../../../manoweb/webpack/src/metaverse/iframe-interface";
+import IFrameInterface from "../../../../web-util/common/iframe-interface";
 import ServiceAPI_Module from "./service-apis";
 import configs from "../../utils/configs";
 
-import {Buffer} from 'buffer';
-
+//import {Buffer} from 'buffer';
 //const App = window.AppInterface;
 
 class UserPermissions

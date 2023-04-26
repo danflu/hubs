@@ -1,4 +1,4 @@
-import Http from "../../../../manoweb/webpack/src/common/http-requester.mjs";
+import Http from "../../../../web-util/common/http-requester.mjs";
 class ServiceAPI
 {
     constructor(apiDomain, authToken) {
