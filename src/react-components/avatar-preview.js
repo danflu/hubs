@@ -16,6 +16,7 @@ import styles from "../assets/stylesheets/avatar-preview.scss";
 
 import warningIconUrl from "../assets/images/warning_icon.png";
 import warningIcon2xUrl from "../assets/images/warning_icon@2x.png";
+import { isIOS } from "../utils/is-mobile";
 
 const TEXTURE_PROPS = {
   base_map: ["map"],
@@ -82,13 +83,31 @@ class AvatarPreview extends Component {
     this.mounted = false;
   }
 
+  enableCtrls() {
+    // danflu: 12/05/2023 : disable avatar preview manipulation on weaker iOS devices (due to crash in safari)
+    let ret = true;
+
+    const w = window.screen.width;
+    const h = window.screen.height;
+
+    if (isIOS())
+    {
+      ret = (w >= 390 && h >= 844) ? true : false;
+    }
+    console.log(`AvatarPreview : enableCtrls : ${ret}, iOS:${isIOS()}, ${w}x${h}`);
+    return ret;
+  }
+
   componentDidMount = () => {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(55, this.canvas.clientWidth / this.canvas.clientHeight, 0.1, 1000);
-    this.controls = new OrbitControls(this.camera, this.canvas);
-    this.controls.screenSpacePanning = true;
-    this.controls.enableKeys = true;
+    this.controls = this.enableCtrls() ? new OrbitControls(this.camera, this.canvas) : null;
+    if (this.controls)
+    {
+      this.controls.screenSpacePanning = true;
+      this.controls.enableKeys = true;
+    }
 
     const light = new THREE.DirectionalLight(0xf7f6ef, 1);
     light.position.set(0, 10, 10);
@@ -96,12 +115,16 @@ class AvatarPreview extends Component {
     this.scene.add(new THREE.HemisphereLight(0xb1e3ff, 0xb1e3ff, 2.5));
 
     this.loadId = 0;
+    this.lastRenderTs = this.controls ? 0 : Date.now();
 
     this.camera.position.set(-0.2, 0.5, 0.5);
     this.camera.matrixAutoUpdate = true;
 
-    this.controls.target.set(0, 0.45, 0);
-    this.controls.update();
+    if (this.controls)
+    {
+      this.controls.target.set(0, 0.45, 0);
+      this.controls.update();
+    }
 
     if (this.props.avatarGltfUrl) {
       this.loadCurrentAvatarGltfUrl();
@@ -119,10 +142,18 @@ class AvatarPreview extends Component {
 
     this.previewRenderer = createRenderer(this.canvas);
     this.previewRenderer.setClearColor(getThemeBackground());
+    
+    // reduce rendering frequency on weaker iOS devices (those which controls were previously disabled -> this.lastRenderTs === 0)
     this.previewRenderer.setAnimationLoop(() => {
-      const dt = clock.getDelta();
-      this.mixer && this.mixer.update(dt);
-      this.previewRenderer.render(this.scene, this.camera);
+      const now = this.lastRenderTs != 0 ? Date.now() : 0
+      const lastRenderElapsedMs = now - this.lastRenderTs;
+      if (lastRenderElapsedMs === 0 || lastRenderElapsedMs > 2500)
+      {
+        const dt = clock.getDelta();
+        this.mixer && this.mixer.update(dt);
+        this.previewRenderer.render(this.scene, this.camera);
+        this.lastRenderTs = now;
+      }
     });
     this.removeThemeChangedListener = onThemeChanged(() => this.previewRenderer.setClearColor(getThemeBackground()));
     window.addEventListener("resize", this.resize);
@@ -160,8 +191,11 @@ class AvatarPreview extends Component {
       fitBoxInFrustum(this.camera, box, center);
       fitBoxInFrustum(this.snapshotCamera, box, center, 0.7);
 
-      this.controls.target.copy(center);
-      this.controls.update();
+      if (this.controls)
+      {
+        this.controls.target.copy(center);
+        this.controls.update();
+      }
     };
   })();
 
