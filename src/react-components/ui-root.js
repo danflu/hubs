@@ -98,6 +98,7 @@ import { TERMS, PRIVACY } from "../constants";
 import { ECSDebugSidebarContainer } from "./debug-panel/ECSSidebar";
 import { NotificationsContainer } from "./room/NotificationsContainer";
 import { usePermissions } from "./room/usePermissions";
+import { InspectAvatarButton } from "./room/InspectAvatarButton";
 
 const avatarEditorDebug = qsTruthy("avatarEditorDebug");
 
@@ -1658,6 +1659,11 @@ class UIRoot extends Component {
                     <ChatToolbarButtonContainer
                       onClick={() => this.toggleSidebar("chat", { chatPrefix: "", chatAutofocus: false })}
                     />
+                    {entered && (
+                      <InspectAvatarButton
+                        onClick={() => window.irmCtrl.setToggleInspectAvatar() }
+                      />
+                    )}
                     {entered && isMobileVR && (
                       <ToolbarButton
                         className={styleUtils.hideLg}

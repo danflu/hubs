@@ -98,7 +98,7 @@ class UserPermissions
     }
 }
 
-const version = "0.1.22";
+const version = "0.1.23";
 
 const QSParamAppName    = "app_name";
 const QSParamApiDomain  = "api_domain";
@@ -136,6 +136,8 @@ export default class IRMCtrl {
         this.mInitCalled = false;
 
         this.mPermissions = new UserPermissions();
+        this.mInspectAvatarToggle = false;
+        this.mInspectAvatar = false;
 
         // maps query string key to local storage key
         this.mKV = {};
@@ -362,7 +364,8 @@ export default class IRMCtrl {
         this.mPermissions.enableUsePen(usePen);
         this.mPermissions.enableShareScreen(shareScreen);
         this.mPermissions.enableShareCamera(shareCamera);
-        this.mPermissions.enableAddObjects(addObjects);     
+        this.mPermissions.enableAddObjects(addObjects);
+        this.mPermissions.enableAddCamera(addObjects);
     }
 
     handleRolePermissionResponse(response)
@@ -509,6 +512,31 @@ export default class IRMCtrl {
             }
         }
         return ret;
+    }
+
+    setToggleInspectAvatar()
+    {
+        this.mInspectAvatar = !this.mInspectAvatar;
+        this.mInspectAvatarToggle = true;
+    }
+
+    isInspectAvatarToggle()
+    {
+        return this.mInspectAvatarToggle;
+    }
+
+    isInspectAvatar()
+    {
+        return this.mInspectAvatar;
+    }
+
+    resetInspectAvatar(flag = null)
+    {
+        if (flag != null)
+        {
+            this.mInspectAvatar = flag;
+        }
+        this.mInspectAvatarToggle = false;
     }
 
     /*

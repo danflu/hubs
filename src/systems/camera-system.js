@@ -331,6 +331,7 @@ export class CameraSystem {
     if (fireChangeEvent) {
       scene.emit("inspect-target-changed");
     }
+    window.irmCtrl.resetInspectAvatar(false);
   }
 
   toggleLights() {
