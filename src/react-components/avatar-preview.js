@@ -84,17 +84,16 @@ class AvatarPreview extends Component {
   }
 
   enableCtrls() {
-    // danflu: 12/05/2023 : disable avatar preview manipulation on weaker iOS devices (due to crash in safari)
+    // danflu: 12/05/2023 : disable avatar preview manipulation on iOS devices (due to crash in safari)
     let ret = true;
-
-    const w = window.screen.width;
-    const h = window.screen.height;
-
+    //const w = window.screen.width;
+    //const h = window.screen.height;
     if (isIOS())
     {
-      ret = (w >= 390 && h >= 844) ? true : false;
+      //ret = (w >= 390 && h >= 844) ? true : false;
+      ret = false;
     }
-    console.log(`AvatarPreview : enableCtrls : ${ret}, iOS:${isIOS()}, ${w}x${h}`);
+    //console.log(`AvatarPreview : enableCtrls : ${ret}, iOS:${isIOS()}, ${w}x${h}`);
     return ret;
   }
 
