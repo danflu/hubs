@@ -98,7 +98,7 @@ class UserPermissions
     }
 }
 
-const version = "0.1.23";
+const version = "0.1.24";
 
 const QSParamAppName    = "app_name";
 const QSParamApiDomain  = "api_domain";

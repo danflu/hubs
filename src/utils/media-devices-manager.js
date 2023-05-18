@@ -364,13 +364,14 @@ export default class MediaDevicesManager extends EventEmitter {
           }
         });
       } else {
-        newStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: isIOS ? { max: 1280 } : { max: 1280, ideal: 720 },
-            frameRate: 30
-          }
-          //TODO: Capture audio from camera?
-        });
+        // newStream = await navigator.mediaDevices.getUserMedia({
+        //   video: {
+        //     width: isIOS ? { max: 1280 } : { max: 1280, ideal: 720 },
+        //     frameRate: 30
+        //   }
+        //   //TODO: Capture audio from camera?
+        // });
+        newStream = await this.getMediaStream();
       }
 
       const videoTracks = newStream ? newStream.getVideoTracks() : [];
@@ -407,6 +408,48 @@ export default class MediaDevicesManager extends EventEmitter {
     }
 
     success(isDisplayMedia, videoTrackAdded, target);
+  }
+
+  async getMediaStream(txQuality)
+  {
+    const txQualityLow    = {name:"low",    width:320,  height:240, frameRate:12};
+    const txQualityMedium = {name:"medium", width:640,  height:480, frameRate:15};
+    const txQualityHigh   = {name:"high",   width:1280, height:720, frameRate:30};
+
+    let profile = null;
+
+    if (txQuality)
+    {
+      switch(txQuality)
+      {
+        case txQualityLow.name:    profile = txQualityLow;    break;
+        case txQualityMedium.name: profile = txQualityMedium; break;
+        case txQualityHigh.name:   profile = txQualityHigh;   break;
+        default:                   profile = txQualityMedium; break;
+      }
+      console.log(`MediaDevicesManager : getMediaStream : ${profile.width}x${profile.height} @ ${profile.frameRate} fps`);
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width  : { ideal: profile.width  },
+          height : { ideal: profile.height },
+          frameRate : profile.frameRate
+        }
+      });
+      return stream;
+    }
+    else
+    {
+      let q = window.irmCtrl.qsVal("tx_quality");
+
+      if (q != txQualityLow.name &&
+          q != txQualityMedium.name &&
+          q != txQualityHigh.name )
+      {
+        q = txQualityMedium.name;
+      }
+      return this.getMediaStream(q);
+    }
   }
 
   async stopVideoShare() {

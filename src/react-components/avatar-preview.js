@@ -146,7 +146,7 @@ class AvatarPreview extends Component {
     this.previewRenderer.setAnimationLoop(() => {
       const now = this.lastRenderTs != 0 ? Date.now() : 0
       const lastRenderElapsedMs = now - this.lastRenderTs;
-      if (lastRenderElapsedMs === 0 || lastRenderElapsedMs > 2500)
+      if (lastRenderElapsedMs === 0 || lastRenderElapsedMs > 3500)
       {
         const dt = clock.getDelta();
         this.mixer && this.mixer.update(dt);
